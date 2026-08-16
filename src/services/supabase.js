@@ -9,6 +9,7 @@ export const supabase = createClient(
   supabaseAnonKey || 'placeholder-anon-key'
 )
 
+// Check if Supabase keys are configured in environment variables
 export const isSupabaseConfigured = () => {
   return !!(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY)
 }
