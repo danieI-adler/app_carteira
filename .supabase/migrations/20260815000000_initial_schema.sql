@@ -125,8 +125,11 @@ CREATE POLICY "Permitir que usuários atualizem seu próprio perfil" ON public.p
 CREATE POLICY "Permitir leitura pública de equipes" ON public.teams
     FOR SELECT USING (true);
 
-CREATE POLICY "Permitir inserção e atualização por admins" ON public.teams
-    FOR ALL USING (
+CREATE POLICY "Permitir inserção de equipes por qualquer pessoa" ON public.teams
+    FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "Permitir atualização de equipes por admins" ON public.teams
+    FOR UPDATE USING (
         EXISTS (
             SELECT 1 FROM public.profiles
             WHERE profiles.id = auth.uid() AND profiles.role = 'admin'
