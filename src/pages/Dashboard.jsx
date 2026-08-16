@@ -78,7 +78,7 @@ export default function Dashboard() {
 
       <main className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Account Summary */}
-        <section class="bg-slate-800 border border-slate-700/50 rounded-xl p-6 shadow-sm">
+        <section className="bg-slate-800 border border-slate-700/50 rounded-xl p-6 shadow-sm">
           <h2 className="text-lg font-semibold text-white mb-4">Resumo da Conta</h2>
           <div className="space-y-3">
             <div className="flex justify-between">
