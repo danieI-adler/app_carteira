@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import usePortfolio from '../hooks/usePortfolio'
 
 export default function Dashboard() {
@@ -47,8 +48,22 @@ export default function Dashboard() {
           <h1 className="text-3xl font-bold tracking-tight text-white">{teamName}</h1>
           <p className="text-slate-400 mt-1">Bem-vindo à sua carteira de simulação.</p>
         </div>
-        <div className="flex gap-4">
-          <div className="text-right">
+        <div className="flex items-center gap-6">
+          <nav className="flex gap-4">
+            <Link
+              to="/mercado"
+              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-750 text-white rounded-lg font-medium text-sm transition-colors"
+            >
+              Negociar Ativos (Mercado)
+            </Link>
+            <Link
+              to="/admin"
+              className="px-4 py-2 bg-slate-850 hover:bg-slate-800 border border-slate-700 text-slate-300 rounded-lg font-medium text-sm transition-colors"
+            >
+              Painel Admin
+            </Link>
+          </nav>
+          <div className="text-right border-l border-slate-800 pl-6">
             <span className="text-sm text-slate-400 block">Patrimônio Líquido</span>
             <span className="text-xl font-bold text-emerald-400">{formatBRL(netWorth)}</span>
           </div>
