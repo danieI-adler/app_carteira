@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../services/supabase'
 import { useAuth } from '../context/AuthContext'
+import { autoUpdatePricesClientSide } from '../utils/priceSync'
 
 export default function usePortfolio() {
   const { user } = useAuth()
@@ -77,6 +78,12 @@ export default function usePortfolio() {
 
       if (transactionsError) throw transactionsError
       setTransactions(transactionsData || [])
+
+      // 5. Silent background price update check
+      const { data: assetsData } = await supabase.from('assets').select('symbol, updated_at')
+      if (assetsData) {
+        autoUpdatePricesClientSide(assetsData)
+      }
 
     } catch (err) {
       console.error('Error fetching portfolio:', err)

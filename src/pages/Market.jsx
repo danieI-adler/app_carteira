@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { supabase } from '../services/supabase'
 import useOrders from '../hooks/useOrders'
 import OrderForm from '../components/business/OrderForm'
+import { autoUpdatePricesClientSide } from '../utils/priceSync'
 
 export default function Market() {
   const [assets, setAssets] = useState([])
@@ -19,6 +20,17 @@ export default function Market() {
           .order('symbol')
         if (!error && data) {
           setAssets(data)
+          // Trigger background update if older than 1 hour
+          autoUpdatePricesClientSide(data).then(() => {
+            // Fetch again silently to show updated prices
+            supabase
+              .from('assets')
+              .select('*')
+              .order('symbol')
+              .then(({ data: freshData }) => {
+                if (freshData) setAssets(freshData)
+              })
+          })
         }
       } catch (err) {
         console.error('Error fetching assets:', err)
