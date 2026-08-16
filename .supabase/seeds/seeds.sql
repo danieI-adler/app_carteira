@@ -9,7 +9,7 @@ ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;
 
 -- 2. Inserir ativos base negociáveis (Preços simulados baseados na cotação real aproximada)
 INSERT INTO public.assets (symbol, name, type, last_price, updated_at) VALUES
-('PETR4', 'Petróleo Brasileiro S.A. - Petrobras', 'acao', 38.50, now()),
+('PETR4', 'Petróleo Brasileiro S.A. - Petrobras', 'acao', 42.09, now()),
 ('VALE3', 'Vale S.A.', 'acao', 62.10, now()),
 ('ITUB4', 'Itaú Unibanco Holding S.A.', 'acao', 32.80, now()),
 ('BBDC4', 'Banco Bradesco S.A.', 'acao', 13.90, now()),
