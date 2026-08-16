@@ -12,7 +12,10 @@ export default function usePortfolio() {
   const [error, setError] = useState(null)
 
   const fetchPortfolioData = useCallback(async () => {
-    if (!user) return
+    if (!user) {
+      setLoading(false)
+      return
+    }
     
     try {
       setLoading(true)
