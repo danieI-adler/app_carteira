@@ -57,6 +57,12 @@ export default function Dashboard() {
               Negociar Ativos (Mercado)
             </Link>
             <Link
+              to="/ranking"
+              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg font-medium text-sm transition-colors"
+            >
+              Classificação
+            </Link>
+            <Link
               to="/admin"
               className="px-4 py-2 bg-slate-850 hover:bg-slate-800 border border-slate-700 text-slate-300 rounded-lg font-medium text-sm transition-colors"
             >
