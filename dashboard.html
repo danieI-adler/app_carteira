@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Progresso Real - app_carteira</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js for interactive metrics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #0b0f19;
+        }
+        .glass-panel {
+            background: rgba(17, 24, 39, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .pulse-emerald {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: .5; transform: scale(1.05); }
+        }
+    </style>
+</head>
+<body class="text-slate-200 min-h-screen pb-12">
+    <!-- Placeholder injected by generate_report.js -->
+    <script>
+        window.PROJECT_DATA = {
+  "updatedAt": "15/08/2026, 21:54:28",
+  "stats": {
+    "fileCount": 19,
+    "lineCount": 1700
+  },
+  "features": [
+    {
+      "name": "Cliente Supabase & Conexão",
+      "status": "done",
+      "detail": "Conexão configurada em src/services/supabase.js"
+    },
+    {
+      "name": "Contexto de Autenticação",
+      "status": "done",
+      "detail": "AuthProvider e useAuth criados em src/context/AuthContext.jsx"
+    },
+    {
+      "name": "Banco de Dados (Migrations & Seeds)",
+      "status": "done",
+      "detail": "Esquema de 8 tabelas e carga inicial de ativos"
+    },
+    {
+      "name": "Layout & Roteamento",
+      "status": "done",
+      "detail": "Configurado react-router-dom no App.jsx"
+    },
+    {
+      "name": "Dashboard do Participante",
+      "status": "in-progress",
+      "detail": "Página criada, pendente integração dinâmica com hooks de portfólio"
+    },
+    {
+      "name": "Painel do Administrador",
+      "status": "in-progress",
+      "detail": "Página criada, pendente controle das janelas operacionais via banco"
+    },
+    {
+      "name": "Hooks de Negócio (usePortfolio / useOrders)",
+      "status": "done",
+      "detail": "Consulta e mutação de ativos e transações"
+    },
+    {
+      "name": "Mercado (Negociação de Ativos)",
+      "status": "pending",
+      "detail": "Envio de ordens a mercado e limitadas"
+    },
+    {
+      "name": "Classificação / Ranking",
+      "status": "pending",
+      "detail": "Tabela de posições e rentabilidade das equipes"
+    }
+  ],
+  "progressPercent": 67,
+  "gitInfo": {
+    "branch": "main",
+    "commitHash": "78a3bd7",
+    "commitMsg": "feat: bootstrap project skeleton and database schema migrations",
+    "commitDate": "15/08/2026 20:41",
+    "totalCommits": 3
+  }
+};
+    </script>
+
+    <!-- Header -->
+    <header class="border-b border-slate-800 bg-slate-900/50 sticky top-0 z-50 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-3 h-3 bg-indigo-500 rounded-full pulse-emerald"></div>
+                <div>
+                    <h1 class="text-lg font-bold text-white tracking-tight">app_carteira</h1>
+                    <p class="text-xs text-slate-400">Relatório Dinâmico de Progresso Real</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <span class="text-xs px-2.5 py-1 rounded-full bg-indigo-950/50 text-indigo-400 border border-indigo-900/50 font-medium">
+                    Atualizado em: <span id="last-update-time">--/--/----</span>
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-6 mt-8 space-y-8">
+        
+        <!-- Status & Key Metrics Grid -->
+        <section class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            
+            <div class="glass-panel rounded-2xl p-6 flex flex-col justify-between">
+                <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Conclusão Geral</span>
+                <div class="mt-4 flex items-baseline gap-2">
+                    <span class="text-4xl font-extrabold text-white" id="progress-percent">--%</span>
+                    <span class="text-xs text-emerald-400 font-medium">Real</span>
+                </div>
+                <div class="w-full bg-slate-800 rounded-full h-1.5 mt-4 overflow-hidden">
+                    <div class="bg-indigo-500 h-1.5 rounded-full transition-all duration-500" id="progress-bar" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <div class="glass-panel rounded-2xl p-6 flex flex-col justify-between">
+                <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Arquivos Rastreados</span>
+                <div class="mt-4 flex items-baseline gap-2">
+                    <span class="text-4xl font-extrabold text-white" id="files-count">-</span>
+                    <span class="text-xs text-slate-400">arquivos</span>
+                </div>
+                <p class="text-xs text-slate-400 mt-4">Códigos JS, JSX, SQL e CSS</p>
+            </div>
+
+            <div class="glass-panel rounded-2xl p-6 flex flex-col justify-between">
+                <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Linhas de Código</span>
+                <div class="mt-4 flex items-baseline gap-2">
+                    <span class="text-4xl font-extrabold text-white" id="lines-count">-</span>
+                    <span class="text-xs text-indigo-400 font-medium">linhas</span>
+                </div>
+                <p class="text-xs text-slate-400 mt-4">Total excluindo dependências</p>
+            </div>
+
+            <div class="glass-panel rounded-2xl p-6 flex flex-col justify-between">
+                <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Último Commit</span>
+                <div class="mt-4 flex items-baseline gap-2">
+                    <span class="text-2xl font-extrabold text-white truncate" id="commit-hash">-</span>
+                </div>
+                <div class="text-xs text-slate-400 mt-4 flex items-center gap-1.5 truncate">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span id="commit-branch" class="font-medium text-slate-350">main</span>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- Progress Timeline & Checklist -->
+        <section class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- Features Checklist -->
+            <div class="glass-panel rounded-2xl p-6 lg:col-span-2">
+                <h2 class="text-lg font-bold text-white mb-6">Status dos Módulos do Sistema</h2>
+                <div class="space-y-4" id="features-list">
+                    <!-- Dynamic Items Injected Here -->
+                </div>
+            </div>
+
+            <!-- Git information details -->
+            <div class="glass-panel rounded-2xl p-6 flex flex-col justify-between">
+                <div>
+                    <h2 class="text-lg font-bold text-white mb-2">Versionamento Git</h2>
+                    <p class="text-xs text-slate-400">Status atualizado do repositório no GitHub.</p>
+                </div>
+                
+                <div class="my-6 space-y-4">
+                    <div class="p-4 bg-slate-900/60 rounded-xl border border-slate-800">
+                        <span class="text-xs text-slate-500 block">Mensagem do Último Commit</span>
+                        <p class="text-xs text-slate-200 mt-1.5 font-medium leading-relaxed" id="commit-msg">
+                            -
+                        </p>
+                        <span class="text-[10px] text-slate-500 mt-2 block" id="commit-date">
+                            Data: -
+                        </span>
+                    </div>
+                </div>
+
+                <div class="space-y-2 border-t border-slate-800 pt-4">
+                    <div class="flex justify-between text-xs">
+                        <span class="text-slate-400">Total de Commits</span>
+                        <span class="text-slate-200 font-semibold" id="total-commits">-</span>
+                    </div>
+                    <div class="flex justify-between text-xs">
+                        <span class="text-slate-400">Branch Ativa</span>
+                        <span class="text-indigo-400 font-semibold" id="active-branch">-</span>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- Product Definition Card -->
+        <section class="glass-panel rounded-2xl p-6">
+            <h2 class="text-lg font-bold text-white mb-4">Definição do Escopo Final (app_carteira)</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
+                <div class="p-4 bg-slate-900/40 rounded-xl border border-slate-800/50">
+                    <h3 class="font-semibold text-white text-sm mb-2">1. Área do Participante</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        Controle completo de posições (compras e vendas a descoberto/short), capital inicial de R$ 10.000.000,00 e tomada de decisões em tempo real com ativos da B3.
+                    </p>
+                </div>
+                <div class="p-4 bg-slate-900/40 rounded-xl border border-slate-800/50">
+                    <h3 class="font-semibold text-white text-sm mb-2">2. Mecanismo de Alavancagem</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        Gestão de risco com empréstimos corporativos automáticos (caso o saldo fique negativo) ou voluntários (limitados a 50% do patrimônio líquido).
+                    </p>
+                </div>
+                <div class="p-4 bg-slate-900/40 rounded-xl border border-slate-800/50">
+                    <h3 class="font-semibold text-white text-sm mb-2">3. Painel Administrativo</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        Ferramentas para fechamento e abertura do mercado, atualização manual/automática de cotações, ajuste de comissão operacional e moderação de equipes.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // Render project data
+        function renderDashboard() {
+            const data = window.PROJECT_DATA;
+            if (!data) return;
+
+            document.getElementById('last-update-time').innerText = data.updatedAt;
+            document.getElementById('progress-percent').innerText = data.progressPercent + '%';
+            document.getElementById('progress-bar').style.width = data.progressPercent + '%';
+            document.getElementById('files-count').innerText = data.stats.fileCount;
+            document.getElementById('lines-count').innerText = data.stats.lineCount;
+
+            document.getElementById('commit-hash').innerText = data.gitInfo.commitHash;
+            document.getElementById('commit-branch').innerText = 'branch: ' + data.gitInfo.branch;
+            document.getElementById('commit-msg').innerText = data.gitInfo.commitMsg;
+            document.getElementById('commit-date').innerText = 'Data: ' + data.gitInfo.commitDate;
+            document.getElementById('total-commits').innerText = data.gitInfo.totalCommits;
+            document.getElementById('active-branch').innerText = data.gitInfo.branch;
+
+            // Render features checklist
+            const featuresList = document.getElementById('features-list');
+            featuresList.innerHTML = '';
+
+            data.features.forEach(feat => {
+                let badgeClass = '';
+                let badgeText = '';
+                
+                if (feat.status === 'done') {
+                    badgeClass = 'bg-emerald-950/50 text-emerald-400 border border-emerald-800/50';
+                    badgeText = 'Concluído';
+                } else if (feat.status === 'in-progress') {
+                    badgeClass = 'bg-yellow-950/50 text-yellow-400 border border-yellow-900/50';
+                    badgeText = 'Em progresso';
+                } else {
+                    badgeClass = 'bg-slate-900 text-slate-500 border border-slate-800';
+                    badgeText = 'Pendente';
+                }
+
+                const item = document.createElement('div');
+                item.className = 'flex items-center justify-between p-4 bg-slate-900/40 rounded-xl border border-slate-800/55 hover:bg-slate-900/70 transition-all';
+                item.innerHTML = `
+                    <div>
+                        <h3 class="text-sm font-semibold text-white">${feat.name}</h3>
+                        <p class="text-xs text-slate-400 mt-1">${feat.detail}</p>
+                    </div>
+                    <span class="text-xs px-2.5 py-1 rounded-full font-medium ${badgeClass}">
+                        ${badgeText}
+                    </span>
+                `;
+                featuresList.appendChild(item);
+            });
+        }
+
+        renderDashboard();
+    </script>
+</body>
+</html>
