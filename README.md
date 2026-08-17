@@ -4,6 +4,8 @@ A **** é uma plataforma web de simulação de investimentos. O sistema opera co
 
 ---
 
+https://daniei-adler.github.io/app_carteira/
+
 ##  Funcionalidades Principais
 
 ### Para Participantes (Equipes)
