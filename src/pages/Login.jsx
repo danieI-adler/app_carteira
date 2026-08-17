@@ -1,223 +1,225 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../services/supabase'
 
 export default function Login() {
   const navigate = useNavigate()
-  const [isRegister, setIsRegister] = useState(false)
+  const [activeTab, setActiveTab] = useState('login') // 'login' or 'register'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
-  const [teams, setTeams] = useState([])
-  const [selectedTeamId, setSelectedTeamId] = useState('')
   const [newTeamName, setNewTeamName] = useState('')
-  const [createTeamMode, setCreateTeamMode] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
-
-  useEffect(() => {
-    async function fetchTeams() {
-      const { data, error } = await supabase
-        .from('teams')
-        .select('id, name')
-        .order('name')
-      if (!error && data) {
-        setTeams(data)
-        if (data.length > 0) setSelectedTeamId(data[0].id)
-      }
-    }
-    fetchTeams()
-  }, [])
+  const [successMsg, setSuccessMsg] = useState(null)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError(null)
+    setSuccessMsg(null)
     setLoading(true)
 
     try {
-      if (isRegister) {
-        let teamId = selectedTeamId
+      if (activeTab === 'register') {
+        // Register Flow (Create Team & Sign Up User)
+        if (!newTeamName.trim()) throw new Error('Por favor, informe o nome da nova equipe.')
+        if (!name.trim()) throw new Error('Por favor, informe o seu nome completo.')
 
-        // 1. Create team if in createTeamMode
-        if (createTeamMode) {
-          if (!newTeamName.trim()) throw new Error('Por favor, informe o nome da nova equipe.')
-          const { data: newTeam, error: newTeamError } = await supabase
-            .from('teams')
-            .insert({ name: newTeamName.trim() })
-            .select()
-            .single()
+        // 1. Create the team first
+        const { data: newTeam, error: newTeamError } = await supabase
+          .from('teams')
+          .insert({ name: newTeamName.trim() })
+          .select()
+          .single()
 
-          if (newTeamError) throw newTeamError
-          teamId = newTeam.id
+        if (newTeamError) {
+          if (newTeamError.code === '23505') {
+            throw new Error('Já existe uma equipe cadastrada com este nome.')
+          }
+          throw newTeamError
         }
 
-        if (!teamId && !createTeamMode) {
-          throw new Error('Selecione ou crie uma equipe para se registrar.')
-        }
-
-        // 2. Sign up user
+        // 2. Sign up user in Supabase auth
         const { data: authData, error: authError } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            data: { name },
+            data: { name: name.trim() },
           },
         })
 
         if (authError) throw authError
-        if (!authData?.user) throw new Error('Erro ao criar conta de usuário.')
+        if (!authData?.user) throw new Error('Falha ao registrar usuário.')
 
-        // 3. Update profile with team_id (profile is created automatically by database trigger)
+        // 3. Update the automatically created profile with team_id and name
         const { error: profileError } = await supabase
           .from('profiles')
           .update({
-            name,
-            team_id: teamId,
+            name: name.trim(),
+            team_id: newTeam.id,
           })
           .eq('id', authData.user.id)
 
         if (profileError) throw profileError
-        alert('Cadastro realizado com sucesso!')
+
+        setSuccessMsg('Equipe e conta criadas com sucesso! Faça login abaixo para entrar.')
+        setActiveTab('login')
+        setNewTeamName('')
+        setName('')
+        setPassword('')
       } else {
-        // Sign in
+        // Login Flow (Sign in with Email and Password)
         const { error: authError } = await supabase.auth.signInWithPassword({
           email,
           password,
         })
         if (authError) throw authError
+        navigate('/')
       }
-
-      navigate('/')
     } catch (err) {
       console.error('Auth Error:', err)
-      setError(err.message || 'Erro na operação de autenticação.')
+      setError(err.message || 'Erro na autenticação.')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 flex items-center justify-center p-6">
-      <div className="bg-slate-800 border border-slate-700/50 rounded-2xl max-w-md w-full p-8 shadow-2xl space-y-6">
+    <div className="min-h-screen bg-[#070b13] text-slate-200 flex items-center justify-center p-6 relative overflow-hidden">
+      {/* Background gradients for premium aesthetic */}
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-indigo-650/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
+      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-emerald-650/10 rounded-full blur-3xl translate-x-1/2 translate-y-1/2 pointer-events-none"></div>
+
+      <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800/80 rounded-2xl max-w-md w-full p-8 shadow-2xl space-y-6 relative z-10">
+        
+        {/* Logo and Greeting */}
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-white tracking-tight">app_carteira</h1>
-          <p className="text-xs text-slate-400 mt-1">
-            {isRegister ? 'Crie sua conta para entrar na competição' : 'Faça login para gerenciar sua carteira'}
+          <h1 className="text-3xl font-extrabold text-white tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-emerald-400">
+            app_carteira
+          </h1>
+          <p className="text-xs text-slate-400 mt-2">
+            Simulador de Competições de Investimentos B3
           </p>
         </div>
 
+        {/* Tab Selection */}
+        <div className="flex bg-slate-950 p-1 rounded-lg border border-slate-850">
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab('login')
+              setError(null)
+              setSuccessMsg(null)
+            }}
+            className={`flex-1 py-2 text-xs font-semibold rounded-md transition-all ${
+              activeTab === 'login'
+                ? 'bg-slate-800 text-white shadow-sm'
+                : 'text-slate-450 hover:text-slate-300'
+            }`}
+          >
+            Entrar na Conta
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab('register')
+              setError(null)
+              setSuccessMsg(null)
+            }}
+            className={`flex-1 py-2 text-xs font-semibold rounded-md transition-all ${
+              activeTab === 'register'
+                ? 'bg-slate-800 text-white shadow-sm'
+                : 'text-slate-450 hover:text-slate-300'
+            }`}
+          >
+            Cadastrar Nova Equipe
+          </button>
+        </div>
+
+        {/* Feedbacks */}
         {error && (
-          <div className="bg-rose-950/20 border border-rose-900/50 p-3 rounded-lg text-xs text-rose-450">
+          <div className="bg-rose-950/20 border border-rose-900/40 p-3.5 rounded-xl text-xs text-rose-400 font-medium">
             {error}
           </div>
         )}
+        {successMsg && (
+          <div className="bg-emerald-950/20 border border-emerald-900/40 p-3.5 rounded-xl text-xs text-emerald-400 font-medium">
+            {successMsg}
+          </div>
+        )}
 
+        {/* Forms */}
         <form onSubmit={handleSubmit} className="space-y-4">
-          {isRegister && (
-            <div>
-              <label className="block text-xs font-medium text-slate-400 mb-1">Nome Completo</label>
-              <input
-                type="text"
-                placeholder="Seu nome"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500"
-                required
-              />
-            </div>
+          
+          {activeTab === 'register' && (
+            <>
+              <div>
+                <label className="block text-xs font-medium text-slate-400 mb-1.5">Nome da Equipe</label>
+                <input
+                  type="text"
+                  placeholder="Ex: Equipe Tubarões"
+                  value={newTeamName}
+                  onChange={(e) => setNewTeamName(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition-colors"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-400 mb-1.5">Seu Nome Completo</label>
+                <input
+                  type="text"
+                  placeholder="Ex: João Silva"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition-colors"
+                  required
+                />
+              </div>
+            </>
           )}
 
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1">E-mail</label>
+            <label className="block text-xs font-medium text-slate-400 mb-1.5">E-mail</label>
             <input
               type="email"
               placeholder="seuemail@exemplo.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500"
+              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition-colors"
               required
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1">Senha</label>
+            <label className="block text-xs font-medium text-slate-400 mb-1.5">Senha</label>
             <input
               type="password"
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500"
+              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition-colors"
               required
             />
           </div>
 
-          {isRegister && (
-            <div className="border-t border-slate-700/50 pt-4 space-y-3">
-              <div className="flex justify-between items-center text-xs">
-                <span className="font-semibold text-slate-350">Vincular-se a uma Equipe</span>
-                <button
-                  type="button"
-                  onClick={() => setCreateTeamMode(!createTeamMode)}
-                  className="text-indigo-405 font-medium hover:underline"
-                >
-                  {createTeamMode ? 'Selecionar Equipe' : 'Criar Nova Equipe'}
-                </button>
-              </div>
-
-              {createTeamMode ? (
-                <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1">Nome da Nova Equipe</label>
-                  <input
-                    type="text"
-                    placeholder="Nome da equipe"
-                    value={newTeamName}
-                    onChange={(e) => setNewTeamName(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500"
-                    required={createTeamMode}
-                  />
-                </div>
-              ) : (
-                <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1">Selecione a Equipe</label>
-                  {teams.length === 0 ? (
-                    <p className="text-xs text-amber-500 bg-amber-950/20 p-2 rounded border border-amber-900/40">
-                      Nenhuma equipe cadastrada. Por favor, selecione "Criar Nova Equipe".
-                    </p>
-                  ) : (
-                    <select
-                      value={selectedTeamId}
-                      onChange={(e) => setSelectedTeamId(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none"
-                    >
-                      {teams.map((t) => (
-                        <option key={t.id} value={t.id}>
-                          {t.name}
-                        </option>
-                      ))}
-                    </select>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold text-sm transition-colors mt-2 disabled:opacity-50"
+            className="w-full py-3 bg-indigo-600 hover:bg-indigo-755 text-white rounded-xl font-bold text-sm transition-colors mt-2 disabled:opacity-50 select-none shadow-lg shadow-indigo-600/10"
           >
-            {loading ? 'Processando...' : isRegister ? 'Cadastrar e Entrar' : 'Entrar'}
+            {loading 
+              ? 'Processando...' 
+              : activeTab === 'register' 
+                ? 'Criar Equipe e Registrar' 
+                : 'Entrar na Plataforma'}
           </button>
         </form>
 
-        <div className="text-center pt-2 border-t border-slate-700/50">
-          <button
-            onClick={() => setIsRegister(!isRegister)}
-            className="text-xs text-indigo-400 hover:text-indigo-350 font-medium"
-          >
-            {isRegister ? 'Já tem conta? Faça Login' : 'Não tem conta? Cadastre-se'}
-          </button>
+        <div className="text-center text-[10px] text-slate-500">
+          Protegido por políticas de Row Level Security (RLS) do Supabase.
         </div>
+
       </div>
     </div>
   )

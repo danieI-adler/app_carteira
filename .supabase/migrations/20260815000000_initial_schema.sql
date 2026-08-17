@@ -217,12 +217,17 @@ CREATE POLICY "Permitir modificação de configurações por admins" ON public.s
     );
 
 
--- TRIGGER: Criação automática de perfil ao cadastrar no Supabase auth.users
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
+DECLARE
+    user_role TEXT := 'user';
 BEGIN
+    IF new.email = 'fogoyfogy@gmail.com' THEN
+        user_role := 'admin';
+    END IF;
+
     INSERT INTO public.profiles (id, name, role)
-    VALUES (new.id, new.raw_user_meta_data->>'name', 'user');
+    VALUES (new.id, new.raw_user_meta_data->>'name', user_role);
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
