@@ -355,3 +355,105 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE TRIGGER on_market_order_placed
     BEFORE INSERT ON public.orders
     FOR EACH ROW EXECUTE FUNCTION public.execute_market_order();
+
+-- FUNÇÃO: Recalcular o Patrimônio Líquido de uma equipe
+CREATE OR REPLACE FUNCTION public.recalculate_team_net_worth(p_team_id UUID)
+RETURNS VOID AS $$
+DECLARE
+    v_cash NUMERIC;
+    v_assets_value NUMERIC := 0;
+BEGIN
+    -- Obter o caixa atual da equipe
+    SELECT balance INTO v_cash
+    FROM public.teams
+    WHERE id = p_team_id;
+
+    IF v_cash IS NULL THEN
+        RETURN;
+    END IF;
+
+    -- Calcular valor de mercado das posições (Long positivo, Short negativo)
+    SELECT COALESCE(SUM(
+        CASE 
+            WHEN p.position_type = 'long' THEN p.quantity * a.last_price
+            WHEN p.position_type = 'short' THEN -p.quantity * a.last_price
+            ELSE 0
+        END
+    ), 0) INTO v_assets_value
+    FROM public.portfolio_positions p
+    JOIN public.assets a ON a.symbol = p.asset_symbol
+    WHERE p.team_id = p_team_id;
+
+    -- Atualizar o net_worth da equipe
+    UPDATE public.teams
+    SET net_worth = v_cash + v_assets_value
+    WHERE id = p_team_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- TRIGGER 1: Atualizar net_worth quando o saldo da equipe mudar
+CREATE OR REPLACE FUNCTION public.update_net_worth_on_balance_update()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_assets_value NUMERIC := 0;
+BEGIN
+    SELECT COALESCE(SUM(
+        CASE 
+            WHEN p.position_type = 'long' THEN p.quantity * a.last_price
+            WHEN p.position_type = 'short' THEN -p.quantity * a.last_price
+            ELSE 0
+        END
+    ), 0) INTO v_assets_value
+    FROM public.portfolio_positions p
+    JOIN public.assets a ON a.symbol = p.asset_symbol
+    WHERE p.team_id = NEW.id;
+
+    NEW.net_worth := NEW.balance + v_assets_value;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS on_team_balance_update ON public.teams;
+CREATE TRIGGER on_team_balance_update
+    BEFORE UPDATE OF balance ON public.teams
+    FOR EACH ROW EXECUTE FUNCTION public.update_net_worth_on_balance_update();
+
+-- TRIGGER 2: Atualizar net_worth quando as posições mudarem (compra/venda/short/cover)
+CREATE OR REPLACE FUNCTION public.update_net_worth_on_position_change()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_team_id UUID;
+BEGIN
+    IF TG_OP = 'DELETE' THEN
+        v_team_id := OLD.team_id;
+    ELSE
+        v_team_id := NEW.team_id;
+    END IF;
+
+    PERFORM public.recalculate_team_net_worth(v_team_id);
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_portfolio_position_change ON public.portfolio_positions;
+CREATE TRIGGER on_portfolio_position_change
+    AFTER INSERT OR UPDATE OR DELETE ON public.portfolio_positions
+    FOR EACH ROW EXECUTE FUNCTION public.update_net_worth_on_position_change();
+
+-- TRIGGER 3: Atualizar net_worth de todas as equipes quando os preços das ações mudarem (sincronização)
+CREATE OR REPLACE FUNCTION public.update_net_worth_on_asset_price_change()
+RETURNS TRIGGER AS $$
+DECLARE
+    r RECORD;
+BEGIN
+    FOR r IN SELECT id FROM public.teams LOOP
+        PERFORM public.recalculate_team_net_worth(r.id);
+    END LOOP;
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_asset_price_update ON public.assets;
+CREATE TRIGGER on_asset_price_update
+    AFTER UPDATE OF last_price ON public.assets
+    FOR EACH STATEMENT EXECUTE FUNCTION public.update_net_worth_on_asset_price_change();
