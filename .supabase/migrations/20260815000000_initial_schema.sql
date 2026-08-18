@@ -65,6 +65,8 @@ CREATE TABLE IF NOT EXISTS public.orders (
     side TEXT NOT NULL CHECK (side IN ('buy', 'sell', 'short', 'cover')),
     limit_price NUMERIC(12, 2),
     status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'executed', 'cancelled')),
+    execution_price NUMERIC(12, 2),
+    executed_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
