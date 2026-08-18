@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom'
 import usePortfolio from '../hooks/usePortfolio'
+import { useAuth } from '../context/AuthContext'
 
 export default function Dashboard() {
   const { team, positions, transactions, loading, error } = usePortfolio()
+  const { signOut } = useAuth()
 
   // Format currency helper
   const formatBRL = (val) => {
@@ -68,6 +70,12 @@ export default function Dashboard() {
             >
               Painel Admin
             </Link>
+            <button
+              onClick={signOut}
+              className="px-4 py-2 bg-rose-950/20 hover:bg-rose-900/30 border border-rose-900/50 text-rose-400 rounded-lg font-medium text-sm transition-colors cursor-pointer"
+            >
+              Sair
+            </button>
           </nav>
           <div className="text-right border-l border-slate-800 pl-6">
             <span className="text-sm text-slate-400 block">Patrimônio Líquido</span>

@@ -44,23 +44,15 @@ export default function Login() {
           email,
           password,
           options: {
-            data: { name: name.trim() },
+            data: { 
+              name: name.trim(),
+              team_id: newTeam.id
+            },
           },
         })
 
         if (authError) throw authError
         if (!authData?.user) throw new Error('Falha ao registrar usuário.')
-
-        // 3. Update the automatically created profile with team_id and name
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({
-            name: name.trim(),
-            team_id: newTeam.id,
-          })
-          .eq('id', authData.user.id)
-
-        if (profileError) throw profileError
 
         setSuccessMsg('Equipe e conta criadas com sucesso! Faça login abaixo para entrar.')
         setActiveTab('login')

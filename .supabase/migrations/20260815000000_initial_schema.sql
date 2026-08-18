@@ -221,13 +221,19 @@ CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 DECLARE
     user_role TEXT := 'user';
+    selected_team_id UUID := NULL;
 BEGIN
     IF new.email = 'fogoyfogy@gmail.com' THEN
         user_role := 'admin';
     END IF;
 
-    INSERT INTO public.profiles (id, name, role)
-    VALUES (new.id, new.raw_user_meta_data->>'name', user_role);
+    -- Extract team_id if passed in raw_user_meta_data
+    IF new.raw_user_meta_data->>'team_id' IS NOT NULL THEN
+        selected_team_id := (new.raw_user_meta_data->>'team_id')::uuid;
+    END IF;
+
+    INSERT INTO public.profiles (id, name, role, team_id)
+    VALUES (new.id, new.raw_user_meta_data->>'name', user_role, selected_team_id);
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
