@@ -140,8 +140,11 @@ CREATE POLICY "Permitir atualização de equipes por admins" ON public.teams
 CREATE POLICY "Permitir leitura pública de ativos" ON public.assets
     FOR SELECT USING (true);
 
+CREATE POLICY "Permitir inserção de ativos por usuários autenticados" ON public.assets
+    FOR INSERT TO authenticated WITH CHECK (true);
+
 CREATE POLICY "Permitir modificação de ativos por admins" ON public.assets
-    FOR ALL USING (
+    FOR UPDATE TO authenticated USING (
         EXISTS (
             SELECT 1 FROM public.profiles
             WHERE profiles.id = auth.uid() AND profiles.role = 'admin'

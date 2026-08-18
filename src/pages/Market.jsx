@@ -9,6 +9,71 @@ export default function Market() {
   const [assets, setAssets] = useState([])
   const [assetsLoading, setAssetsLoading] = useState(true)
   const { orders, loading: ordersLoading, createOrder, cancelOrder } = useOrders()
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchLoading, setSearchLoading] = useState(false)
+
+  const handleSearchAndAddAsset = async (e) => {
+    e.preventDefault()
+    if (!searchQuery.trim()) return
+
+    const symbol = searchQuery.toUpperCase().trim()
+    setSearchLoading(true)
+
+    try {
+      const yahooSymbol = `${symbol}.SA`
+      const url = `https://query1.finance.yahoo.com/v8/finance/chart/${yahooSymbol}`
+      const response = await fetch(url)
+      
+      if (!response.ok) {
+        throw new Error('Ativo não encontrado ou inválido na B3 (Yahoo Finance).')
+      }
+
+      const data = await response.json()
+      const meta = data.chart?.result?.[0]?.meta
+      
+      if (!meta || !meta.regularMarketPrice) {
+        throw new Error('Cotação não disponível para este ativo.')
+      }
+
+      const price = meta.regularMarketPrice
+      let assetType = 'acao'
+      if (symbol.endsWith('11')) {
+        assetType = 'fii'
+      }
+
+      const { error: insertError } = await supabase
+        .from('assets')
+        .insert({
+          symbol,
+          name: `${symbol} - Sincronizado via Yahoo Finance`,
+          type: assetType,
+          last_price: price,
+          updated_at: new Date().toISOString()
+        })
+
+      if (insertError) {
+        if (insertError.code === '23505') {
+          alert(`O ativo ${symbol} já está cadastrado e disponível na lista!`)
+        } else {
+          throw insertError
+        }
+      } else {
+        alert(`Ativo ${symbol} cadastrado com sucesso por R$ ${price.toFixed(2)}!`)
+      }
+
+      const { data: freshAssets } = await supabase
+        .from('assets')
+        .select('*')
+        .order('symbol')
+      if (freshAssets) setAssets(freshAssets)
+      setSearchQuery('')
+    } catch (err) {
+      console.error(err)
+      alert(err.message || 'Erro ao buscar ou cadastrar o ativo.')
+    } finally {
+      setSearchLoading(false)
+    }
+  }
 
   useEffect(() => {
     async function fetchAssets() {
@@ -79,9 +144,30 @@ export default function Market() {
       </header>
 
       <main className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Assets List */}
         <section className="bg-slate-800 border border-slate-700/50 rounded-xl p-6 shadow-sm lg:col-span-2">
-          <h2 className="text-lg font-semibold text-white mb-4">Cotações Disponíveis</h2>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+            <h2 className="text-lg font-semibold text-white">Cotações Disponíveis</h2>
+            
+            {/* Search Input for B3 Yahoo Finance */}
+            <form onSubmit={handleSearchAndAddAsset} className="flex gap-2 w-full sm:w-auto">
+              <input
+                type="text"
+                placeholder="Buscar ativo B3 (Ex: WEGE3)"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 w-full sm:w-48 uppercase placeholder-slate-500"
+                disabled={searchLoading}
+                required
+              />
+              <button
+                type="submit"
+                disabled={searchLoading}
+                className="bg-indigo-600 hover:bg-indigo-755 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-colors disabled:opacity-50 select-none whitespace-nowrap cursor-pointer"
+              >
+                {searchLoading ? 'Buscando...' : 'Adicionar Ativo'}
+              </button>
+            </form>
+          </div>
           {assetsLoading ? (
             <div className="text-center py-12 text-slate-500">Carregando cotações...</div>
           ) : (
