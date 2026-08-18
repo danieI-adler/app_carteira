@@ -244,3 +244,112 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
     FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- TRIGGER: Executar ordens a mercado de forma automática e atômica
+CREATE OR REPLACE FUNCTION public.execute_market_order()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_last_price NUMERIC;
+    v_team_balance NUMERIC;
+    v_total_cost NUMERIC;
+    v_pos_qty INT;
+    v_pos_avg_price NUMERIC;
+BEGIN
+    -- Executa apenas ordens a mercado
+    IF NEW.order_type = 'market' THEN
+        -- Obter preço atual do ativo
+        SELECT last_price INTO v_last_price
+        FROM public.assets
+        WHERE symbol = NEW.asset_symbol;
+
+        IF v_last_price IS NULL THEN
+            RAISE EXCEPTION 'Ativo % não possui preço cadastrado no banco.', NEW.asset_symbol;
+        END IF;
+
+        -- Obter saldo da equipe
+        SELECT balance INTO v_team_balance
+        FROM public.teams
+        WHERE id = NEW.team_id;
+
+        v_total_cost := NEW.quantity * v_last_price;
+
+        IF NEW.side = 'buy' THEN
+            -- Verificar saldo
+            IF v_team_balance < v_total_cost THEN
+                RAISE EXCEPTION 'Saldo insuficiente (Saldo: R$ %, Custo da Ordem: R$ %).', v_team_balance, v_total_cost;
+            END IF;
+
+            -- Deduzir saldo da equipe
+            UPDATE public.teams
+            SET balance = balance - v_total_cost
+            WHERE id = NEW.team_id;
+
+            -- Inserir ou atualizar posição (long)
+            SELECT quantity, average_price INTO v_pos_qty, v_pos_avg_price
+            FROM public.portfolio_positions
+            WHERE team_id = NEW.team_id AND asset_symbol = NEW.asset_symbol AND position_type = 'long';
+
+            IF FOUND THEN
+                UPDATE public.portfolio_positions
+                SET 
+                    average_price = ((v_pos_qty * v_pos_avg_price) + v_total_cost) / (v_pos_qty + NEW.quantity),
+                    quantity = quantity + NEW.quantity,
+                    updated_at = now()
+                WHERE team_id = NEW.team_id AND asset_symbol = NEW.asset_symbol AND position_type = 'long';
+            ELSE
+                INSERT INTO public.portfolio_positions (team_id, asset_symbol, quantity, average_price, position_type)
+                VALUES (NEW.team_id, NEW.asset_symbol, NEW.quantity, v_last_price, 'long');
+            END IF;
+
+            -- Registrar transação
+            INSERT INTO public.transactions (team_id, asset_symbol, quantity, price, transaction_type)
+            VALUES (NEW.team_id, NEW.asset_symbol, NEW.quantity, v_last_price, 'buy');
+
+            -- Atualizar status da ordem
+            NEW.status := 'executed';
+            NEW.execution_price := v_last_price;
+            NEW.executed_at := now();
+
+        ELSIF NEW.side = 'sell' THEN
+            -- Verificar se possui a posição para vender
+            SELECT quantity INTO v_pos_qty
+            FROM public.portfolio_positions
+            WHERE team_id = NEW.team_id AND asset_symbol = NEW.asset_symbol AND position_type = 'long';
+
+            IF v_pos_qty IS NULL OR v_pos_qty < NEW.quantity THEN
+                RAISE EXCEPTION 'Posição insuficiente para venda (Possui: % unidades).', COALESCE(v_pos_qty, 0);
+            END IF;
+
+            -- Creditar saldo à equipe
+            UPDATE public.teams
+            SET balance = balance + v_total_cost
+            WHERE id = NEW.team_id;
+
+            -- Deduzir quantidade
+            IF v_pos_qty = NEW.quantity THEN
+                DELETE FROM public.portfolio_positions
+                WHERE team_id = NEW.team_id AND asset_symbol = NEW.asset_symbol AND position_type = 'long';
+            ELSE
+                UPDATE public.portfolio_positions
+                SET quantity = quantity - NEW.quantity, updated_at = now()
+                WHERE team_id = NEW.team_id AND asset_symbol = NEW.asset_symbol AND position_type = 'long';
+            END IF;
+
+            -- Registrar transação
+            INSERT INTO public.transactions (team_id, asset_symbol, quantity, price, transaction_type)
+            VALUES (NEW.team_id, NEW.asset_symbol, NEW.quantity, v_last_price, 'sell');
+
+            -- Atualizar status da ordem
+            NEW.status := 'executed';
+            NEW.execution_price := v_last_price;
+            NEW.executed_at := now();
+        END IF;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE TRIGGER on_market_order_placed
+    BEFORE INSERT ON public.orders
+    FOR EACH ROW EXECUTE FUNCTION public.execute_market_order();
