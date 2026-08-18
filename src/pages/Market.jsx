@@ -20,22 +20,21 @@ export default function Market() {
     setSearchLoading(true)
 
     try {
-      const yahooSymbol = `${symbol}.SA`
-      const url = `https://query1.finance.yahoo.com/v8/finance/chart/${yahooSymbol}`
+      const url = `https://brapi.dev/api/quote/${symbol}`
       const response = await fetch(url)
       
       if (!response.ok) {
-        throw new Error('Ativo não encontrado ou inválido na B3 (Yahoo Finance).')
+        throw new Error('Ativo não encontrado ou inválido na B3 (Brapi API).')
       }
 
       const data = await response.json()
-      const meta = data.chart?.result?.[0]?.meta
+      const resultObj = data.results?.[0]
       
-      if (!meta || !meta.regularMarketPrice) {
+      if (!resultObj || !resultObj.regularMarketPrice) {
         throw new Error('Cotação não disponível para este ativo.')
       }
 
-      const price = meta.regularMarketPrice
+      const price = resultObj.regularMarketPrice
       let assetType = 'acao'
       if (symbol.endsWith('11')) {
         assetType = 'fii'
@@ -45,7 +44,7 @@ export default function Market() {
         .from('assets')
         .insert({
           symbol,
-          name: `${symbol} - Sincronizado via Yahoo Finance`,
+          name: resultObj.longName || `${symbol} - Sincronizado via Brapi`,
           type: assetType,
           last_price: price,
           updated_at: new Date().toISOString()
