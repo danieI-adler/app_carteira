@@ -20,10 +20,18 @@ async function fetchQuote(symbol) {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
       }
     })
-    if (!response.ok) {
-      console.warn(`Aviso: Falha ao obter cotação de ${symbol} (Status ${response.status})`)
+    
+    if (response.status === 404) {
+      console.warn(`Aviso: Ativo ${symbol} retornou 404 (provavelmente deslistado ou renomeado). Deletando do banco de dados...`)
+      await supabase.from('assets').delete().eq('symbol', symbol)
       return null
     }
+
+    if (!response.ok) {
+      console.warn(`Aviso: Falha temporária ao obter cotação de ${symbol} (Status ${response.status})`)
+      return null
+    }
+    
     const data = await response.json()
     const price = data.chart?.result?.[0]?.meta?.regularMarketPrice
     return { symbol, price }
@@ -49,25 +57,24 @@ async function updatePrices() {
     process.exit(0)
   }
 
-  console.log(`Encontrados ${assets.length} ativos. Iniciando cotações via Yahoo Finance v8 chart API...`)
+  console.log(`Encontrados ${assets.length} ativos no banco de dados. Iniciando cotações e auto-limpeza...`)
 
-  // Process in small parallel chunks to avoid rate limiting or server blocks
+  // Process in small chunks to prevent rate limits
   const chunkSize = 10
   const results = []
 
   for (let i = 0; i < assets.length; i += chunkSize) {
     const chunk = assets.slice(i, i + chunkSize)
-    console.log(`Processando ativos ${i + 1} a ${Math.min(i + chunkSize, assets.length)} de ${assets.length}...`)
+    console.log(`Processando lote ${i + 1} a ${Math.min(i + chunkSize, assets.length)} de ${assets.length}...`)
     
     const promises = chunk.map(asset => fetchQuote(asset.symbol))
     const chunkResults = await Promise.all(promises)
     results.push(...chunkResults.filter(Boolean))
     
-    // Brief delay between chunks
-    await new Promise(resolve => setTimeout(resolve, 200))
+    await new Promise(resolve => setTimeout(resolve, 250))
   }
 
-  console.log(`Cotações obtidas: ${results.length} de ${assets.length}. Salvando no Supabase...`)
+  console.log(`Cotações válidas obtidas: ${results.length} de ${assets.length}. Atualizando Supabase...`)
 
   for (const quote of results) {
     if (quote.price) {
@@ -85,7 +92,7 @@ async function updatePrices() {
     }
   }
 
-  console.log('Sincronização concluída com sucesso.')
+  console.log('Sincronização e auto-limpeza concluídas com sucesso.')
   process.exit(0)
 }
 
