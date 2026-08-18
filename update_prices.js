@@ -11,66 +11,67 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
-const symbolMapping = {
-  'PETR4': 'PETR4.SA',
-  'VALE3': 'VALE3.SA',
-  'ITUB4': 'ITUB4.SA',
-  'BBDC4': 'BBDC4.SA',
-  'BOVA11': 'BOVA11.SA',
-  'IVVB11': 'IVVB11.SA',
-  'MXRF11': 'MXRF11.SA',
-  'HGLG11': 'HGLG11.SA',
-  'ALZR11': 'ALZR11.SA'
-}
-
-async function fetchQuote(b3Symbol, yahooSymbol) {
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${yahooSymbol}`
-  try {
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-      }
-    })
-    if (!response.ok) return null
-    const data = await response.json()
-    const price = data.chart?.result?.[0]?.meta?.regularMarketPrice
-    return { symbol: b3Symbol, price }
-  } catch (e) {
-    console.error(`Erro ao consultar ${b3Symbol}:`, e.message)
-    return null
-  }
-}
-
 async function updatePrices() {
-  console.log('Iniciando busca de cotações individuais no Yahoo Finance...')
+  console.log('Buscando lista de ativos no Supabase...')
+  const { data: assets, error: fetchError } = await supabase
+    .from('assets')
+    .select('symbol')
+
+  if (fetchError) {
+    console.error('Erro ao buscar ativos do banco:', fetchError.message)
+    process.exit(1)
+  }
+
+  if (!assets || assets.length === 0) {
+    console.log('Nenhum ativo cadastrado para atualizar.')
+    process.exit(0)
+  }
+
+  console.log(`Encontrados ${assets.length} ativos. Iniciando cotações no Yahoo Finance...`)
+
+  // Split into batches of 40 symbols to keep URLs safe and performant
+  const batchSize = 40
+  const batches = []
+  for (let i = 0; i < assets.length; i += batchSize) {
+    batches.push(assets.slice(i, i + batchSize))
+  }
+
   try {
-    const promises = Object.keys(symbolMapping).map(b3Symbol => 
-      fetchQuote(b3Symbol, symbolMapping[b3Symbol])
-    )
-    
-    const results = await Promise.all(promises)
-    const validQuotes = results.filter(Boolean)
+    for (let i = 0; i < batches.length; i++) {
+      const batch = batches[i]
+      const yahooSymbols = batch.map(a => `${a.symbol}.SA`).join(',')
+      const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${yahooSymbols}`
 
-    if (validQuotes.length === 0) {
-      throw new Error('Nenhuma cotação válida retornada pela API.')
-    }
+      console.log(`Consultando lote ${i + 1}/${batches.length}...`)
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        }
+      })
 
-    console.log(`Encontradas ${validQuotes.length} cotações. Atualizando banco de dados...`)
+      if (!response.ok) {
+        throw new Error(`Erro na API do Yahoo Finance: Status ${response.status}`)
+      }
 
-    for (const quote of validQuotes) {
-      if (quote.price) {
-        const { error } = await supabase
-          .from('assets')
-          .update({
-            last_price: quote.price,
-            updated_at: new Date().toISOString()
-          })
-          .eq('symbol', quote.symbol)
+      const data = await response.json()
+      const quotes = data.quoteResponse?.result || []
 
-        if (error) {
-          console.error(`Erro ao atualizar ${quote.symbol}:`, error.message)
-        } else {
-          console.log(`Ativo ${quote.symbol} atualizado para R$ ${quote.price.toFixed(2)}`)
+      for (const quote of quotes) {
+        const b3Symbol = quote.symbol.replace('.SA', '')
+        const price = quote.regularMarketPrice
+
+        if (price) {
+          const { error: updateError } = await supabase
+            .from('assets')
+            .update({
+              last_price: price,
+              updated_at: new Date().toISOString()
+            })
+            .eq('symbol', b3Symbol)
+
+          if (updateError) {
+            console.error(`Erro ao atualizar ${b3Symbol}:`, updateError.message)
+          }
         }
       }
     }

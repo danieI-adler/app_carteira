@@ -9,70 +9,7 @@ export default function Market() {
   const [assets, setAssets] = useState([])
   const [assetsLoading, setAssetsLoading] = useState(true)
   const { orders, loading: ordersLoading, createOrder, cancelOrder } = useOrders()
-  const [searchQuery, setSearchQuery] = useState('')
-  const [searchLoading, setSearchLoading] = useState(false)
-
-  const handleSearchAndAddAsset = async (e) => {
-    e.preventDefault()
-    if (!searchQuery.trim()) return
-
-    const symbol = searchQuery.toUpperCase().trim()
-    setSearchLoading(true)
-
-    try {
-      const url = `https://brapi.dev/api/quote/${symbol}`
-      const response = await fetch(url)
-      
-      if (!response.ok) {
-        throw new Error('Ativo não encontrado ou inválido na B3 (Brapi API).')
-      }
-
-      const data = await response.json()
-      const resultObj = data.results?.[0]
-      
-      if (!resultObj || !resultObj.regularMarketPrice) {
-        throw new Error('Cotação não disponível para este ativo.')
-      }
-
-      const price = resultObj.regularMarketPrice
-      let assetType = 'acao'
-      if (symbol.endsWith('11')) {
-        assetType = 'fii'
-      }
-
-      const { error: insertError } = await supabase
-        .from('assets')
-        .insert({
-          symbol,
-          name: resultObj.longName || `${symbol} - Sincronizado via Brapi`,
-          type: assetType,
-          last_price: price,
-          updated_at: new Date().toISOString()
-        })
-
-      if (insertError) {
-        if (insertError.code === '23505') {
-          alert(`O ativo ${symbol} já está cadastrado e disponível na lista!`)
-        } else {
-          throw insertError
-        }
-      } else {
-        alert(`Ativo ${symbol} cadastrado com sucesso por R$ ${price.toFixed(2)}!`)
-      }
-
-      const { data: freshAssets } = await supabase
-        .from('assets')
-        .select('*')
-        .order('symbol')
-      if (freshAssets) setAssets(freshAssets)
-      setSearchQuery('')
-    } catch (err) {
-      console.error(err)
-      alert(err.message || 'Erro ao buscar ou cadastrar o ativo.')
-    } finally {
-      setSearchLoading(false)
-    }
-  }
+  const [filterQuery, setFilterQuery] = useState('')
 
   useEffect(() => {
     async function fetchAssets() {
@@ -147,25 +84,16 @@ export default function Market() {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
             <h2 className="text-lg font-semibold text-white">Cotações Disponíveis</h2>
             
-            {/* Search Input for B3 Yahoo Finance */}
-            <form onSubmit={handleSearchAndAddAsset} className="flex gap-2 w-full sm:w-auto">
+            {/* Filter Input for loaded assets */}
+            <div className="flex gap-2 w-full sm:w-auto">
               <input
                 type="text"
-                placeholder="Buscar ativo B3 (Ex: WEGE3)"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 w-full sm:w-48 uppercase placeholder-slate-500"
-                disabled={searchLoading}
-                required
+                placeholder="Filtrar por sigla ou nome (Ex: WEGE3)"
+                value={filterQuery}
+                onChange={(e) => setFilterQuery(e.target.value)}
+                className="bg-slate-950 border border-slate-750 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 w-full sm:w-56 placeholder-slate-500 uppercase"
               />
-              <button
-                type="submit"
-                disabled={searchLoading}
-                className="bg-indigo-600 hover:bg-indigo-755 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-colors disabled:opacity-50 select-none whitespace-nowrap cursor-pointer"
-              >
-                {searchLoading ? 'Buscando...' : 'Adicionar Ativo'}
-              </button>
-            </form>
+            </div>
           </div>
           {assetsLoading ? (
             <div className="text-center py-12 text-slate-500">Carregando cotações...</div>
@@ -181,7 +109,10 @@ export default function Market() {
                   </tr>
                 </thead>
                 <tbody>
-                  {assets.map((asset) => (
+                  {assets.filter(asset => 
+                    asset.symbol.toLowerCase().includes(filterQuery.toLowerCase()) ||
+                    asset.name.toLowerCase().includes(filterQuery.toLowerCase())
+                  ).map((asset) => (
                     <tr key={asset.symbol} className="border-b border-slate-800 hover:bg-slate-750/30">
                       <td className="py-3 font-semibold text-indigo-400">{asset.symbol}</td>
                       <td className="py-3 text-slate-300">{asset.name}</td>
