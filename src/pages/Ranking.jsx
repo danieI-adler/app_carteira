@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../services/supabase'
+import { useAuth } from '../context/AuthContext'
 
 export default function Ranking() {
   const [teams, setTeams] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const { profile } = useAuth()
 
   useEffect(() => {
     async function fetchRanking() {
@@ -56,12 +58,14 @@ export default function Ranking() {
           >
             Mercado
           </Link>
-          <Link
-            to="/admin"
-            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg font-medium text-sm transition-colors"
-          >
-            Painel Admin
-          </Link>
+          {profile?.role === 'admin' && (
+            <Link
+              to="/admin"
+              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg font-medium text-sm transition-colors"
+            >
+              Painel Admin
+            </Link>
+          )}
         </nav>
       </header>
 

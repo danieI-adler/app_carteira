@@ -4,12 +4,14 @@ import { supabase } from '../services/supabase'
 import useOrders from '../hooks/useOrders'
 import OrderForm from '../components/business/OrderForm'
 import { autoUpdatePricesClientSide } from '../utils/priceSync'
+import { useAuth } from '../context/AuthContext'
 
 export default function Market() {
   const [assets, setAssets] = useState([])
   const [assetsLoading, setAssetsLoading] = useState(true)
   const { orders, loading: ordersLoading, createOrder, cancelOrder } = useOrders()
   const [filterQuery, setFilterQuery] = useState('')
+  const { profile } = useAuth()
 
   useEffect(() => {
     async function fetchAssets() {
@@ -70,12 +72,14 @@ export default function Market() {
           >
             Classificação
           </Link>
-          <Link
-            to="/admin"
-            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg font-medium text-sm transition-colors"
-          >
-            Painel Admin
-          </Link>
+          {profile?.role === 'admin' && (
+            <Link
+              to="/admin"
+              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg font-medium text-sm transition-colors"
+            >
+              Painel Admin
+            </Link>
+          )}
         </nav>
       </header>
 

@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 
 export default function Dashboard() {
   const { team, positions, transactions, loading, error } = usePortfolio()
-  const { signOut } = useAuth()
+  const { signOut, profile } = useAuth()
 
   // Format currency helper
   const formatBRL = (val) => {
@@ -64,12 +64,14 @@ export default function Dashboard() {
             >
               Classificação
             </Link>
-            <Link
-              to="/admin"
-              className="px-4 py-2 bg-slate-850 hover:bg-slate-800 border border-slate-700 text-slate-300 rounded-lg font-medium text-sm transition-colors"
-            >
-              Painel Admin
-            </Link>
+            {profile?.role === 'admin' && (
+              <Link
+                to="/admin"
+                className="px-4 py-2 bg-slate-850 hover:bg-slate-800 border border-slate-700 text-slate-300 rounded-lg font-medium text-sm transition-colors"
+              >
+                Painel Admin
+              </Link>
+            )}
             <button
               onClick={signOut}
               className="px-4 py-2 bg-rose-950/20 hover:bg-rose-900/30 border border-rose-900/50 text-rose-400 rounded-lg font-medium text-sm transition-colors cursor-pointer"

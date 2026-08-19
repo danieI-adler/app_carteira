@@ -21,6 +21,25 @@ function PrivateRoute({ children }) {
   return user ? children : <Navigate to="/login" replace />
 }
 
+// Wrapper component to guard admin-only routes
+function AdminRoute({ children }) {
+  const { user, profile, loading } = useAuth()
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    )
+  }
+
+  if (!user || profile?.role !== 'admin') {
+    return <Navigate to="/" replace />
+  }
+
+  return children
+}
+
 export default function AppRoutes() {
   return (
     <Routes>
@@ -28,7 +47,7 @@ export default function AppRoutes() {
       <Route path="/" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
       <Route path="/mercado" element={<PrivateRoute><Market /></PrivateRoute>} />
       <Route path="/ranking" element={<PrivateRoute><Ranking /></PrivateRoute>} />
-      <Route path="/admin" element={<PrivateRoute><Admin /></PrivateRoute>} />
+      <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
