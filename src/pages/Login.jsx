@@ -77,9 +77,6 @@ export default function Login() {
         
         {/* Brand */}
         <div className="space-y-1 text-center">
-          <div className="w-8 h-8 rounded bg-zinc-800 border border-zinc-700 flex items-center justify-center font-bold text-sm text-zinc-100 mx-auto mb-3">
-            C
-          </div>
           <h1 className="text-xl font-semibold text-zinc-100 tracking-tight">
             app_carteira
           </h1>

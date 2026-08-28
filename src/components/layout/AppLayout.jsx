@@ -45,9 +45,6 @@ export default function AppLayout() {
       {/* Mobile Top Bar */}
       <header className="md:hidden bg-[#111114] border-b border-zinc-800 px-5 py-3.5 flex items-center justify-between sticky top-0 z-40">
         <div className="flex items-center gap-2.5">
-          <div className="w-6 h-6 rounded bg-zinc-800 border border-zinc-700 flex items-center justify-center font-bold text-xs text-zinc-200">
-            C
-          </div>
           <span className="font-semibold text-sm tracking-tight text-zinc-100">app_carteira</span>
         </div>
         <button
@@ -78,24 +75,15 @@ export default function AppLayout() {
           {/* Brand Header */}
           <div className="flex items-center justify-between px-2 pt-1">
             {!collapsed ? (
-              <div className="flex items-center gap-2.5">
-                <div className="w-6 h-6 rounded bg-zinc-800 border border-zinc-700 flex items-center justify-center font-semibold text-xs text-zinc-200">
-                  C
-                </div>
-                <span className="font-semibold text-sm tracking-tight text-zinc-100 truncate">
-                  app_carteira
-                </span>
-              </div>
-            ) : (
-              <div className="w-6 h-6 rounded bg-zinc-800 border border-zinc-700 flex items-center justify-center font-semibold text-xs text-zinc-200 mx-auto">
-                C
-              </div>
-            )}
+              <span className="font-semibold text-sm tracking-tight text-zinc-100 truncate">
+                app_carteira
+              </span>
+            ) : null}
 
             <button
               onClick={() => setCollapsed(!collapsed)}
               title={collapsed ? "Expandir" : "Recolher"}
-              className="hidden md:flex p-1 rounded-md text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/60 transition-colors cursor-pointer"
+              className={`p-1 rounded-md text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/60 transition-colors cursor-pointer ${collapsed ? 'mx-auto' : 'hidden md:flex'}`}
             >
               {collapsed ? <ChevronRight size={15} /> : <ChevronLeft size={15} />}
             </button>
