@@ -3,11 +3,13 @@ import { supabase } from '../services/supabase'
 import useOrders from '../hooks/useOrders'
 import OrderForm from '../components/business/OrderForm'
 import { autoUpdatePricesClientSide } from '../utils/priceSync'
+import { getMarketStatus } from '../utils/marketSchedule'
 import { 
   ChevronDown, 
   ChevronUp, 
   Search, 
-  Plus
+  Plus,
+  Clock
 } from 'lucide-react'
 
 export default function Market() {
@@ -19,6 +21,8 @@ export default function Market() {
   const [isQuotesOpen, setIsQuotesOpen] = useState(true)
   const [selectedAssetSymbol, setSelectedAssetSymbol] = useState('')
 
+  const marketStatus = getMarketStatus()
+
   useEffect(() => {
     async function fetchAssets() {
       try {
@@ -29,15 +33,7 @@ export default function Market() {
           .order('symbol')
         if (!error && data) {
           setAssets(data)
-          autoUpdatePricesClientSide(data).then(() => {
-            supabase
-              .from('assets')
-              .select('*')
-              .order('symbol')
-              .then(({ data: freshData }) => {
-                if (freshData) setAssets(freshData)
-              })
-          })
+          autoUpdatePricesClientSide()
         }
       } catch (err) {
         console.error('Error fetching assets:', err)
@@ -65,10 +61,41 @@ export default function Market() {
   return (
     <div className="max-w-7xl mx-auto space-y-6">
       
-      {/* Header */}
-      <div className="border-b border-zinc-800 pb-4">
-        <div className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider">Negociação</div>
-        <h1 className="text-xl font-semibold text-zinc-100 tracking-tight mt-0.5">Mercado de Ativos</h1>
+      {/* Header & Market Status Banner */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-zinc-800 pb-4">
+        <div>
+          <div className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider">Negociação</div>
+          <h1 className="text-xl font-semibold text-zinc-100 tracking-tight mt-0.5">Mercado de Ativos</h1>
+        </div>
+        
+        {/* Market Status Pill */}
+        <div className="flex items-center gap-2">
+          <div className={`px-3 py-1.5 rounded-md border text-xs font-semibold flex items-center gap-2 ${
+            marketStatus.isOpen 
+              ? 'bg-emerald-950/50 border-emerald-800/80 text-emerald-400' 
+              : 'bg-zinc-900 border-zinc-800 text-zinc-400'
+          }`}>
+            <span className={`w-2 h-2 rounded-full ${marketStatus.isOpen ? 'bg-emerald-400 animate-pulse' : 'bg-zinc-600'}`} />
+            <span>{marketStatus.statusLabel}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Schedule Banner */}
+      <div className="surface-card p-3.5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs">
+        <div className="flex items-center gap-2 text-zinc-300">
+          <Clock size={15} className="text-zinc-500 shrink-0" />
+          <span>
+            <strong>Horário de Operação:</strong> Terças, Quintas e Fins de Semana (das 19h00 às 08h00).
+          </span>
+        </div>
+        <div className="text-zinc-500 text-[11px]">
+          {marketStatus.isOpen ? (
+            <span className="text-emerald-400 font-medium">Pregão noturno ativo para envio de ordens</span>
+          ) : (
+            <span>Próxima abertura: <strong className="text-zinc-300">{marketStatus.nextOpening}</strong></span>
+          )}
+        </div>
       </div>
 
       <main className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -139,7 +166,7 @@ export default function Market() {
                       <th className="py-2.5 px-4 font-medium min-w-[80px]">Sigla</th>
                       <th className="py-2.5 px-4 font-medium">Nome do Ativo</th>
                       <th className="py-2.5 px-4 font-medium">Classe</th>
-                      <th className="py-2.5 px-4 text-right font-medium min-w-[100px]">Cotação</th>
+                      <th className="py-2.5 px-4 text-right font-medium min-w-[100px]">Cotação Oficial</th>
                       <th className="py-2.5 px-4 text-right font-medium">Ação</th>
                     </tr>
                   </thead>
@@ -189,7 +216,7 @@ export default function Market() {
         {/* Bottom column: Active Orders */}
         <div className="surface-card lg:col-span-3">
           <div className="px-5 py-3.5 border-b border-zinc-800 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-zinc-100">Suas Ordens de Mercado</h2>
+            <h2 className="text-sm font-semibold text-zinc-100">Ordens da Equipe</h2>
             <span className="text-xs text-zinc-500 font-mono-nums">{orders.length} ordens</span>
           </div>
 
@@ -232,7 +259,7 @@ export default function Market() {
                           {order.limit_price ? formatBRL(order.limit_price) : '—'}
                         </td>
                         <td className={`py-2.5 px-4 capitalize font-sans ${statusClass}`}>
-                          {order.status === 'executed' ? 'Executada' : order.status === 'cancelled' ? 'Cancelada' : 'Pendente'}
+                          {order.status === 'executed' ? 'Executada (Abertura)' : order.status === 'cancelled' ? 'Cancelada' : 'Pendente Abertura'}
                         </td>
                         <td className="py-2.5 px-4 text-right font-sans">
                           {order.status === 'pending' && (
