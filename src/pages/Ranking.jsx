@@ -1,13 +1,11 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
 import { supabase } from '../services/supabase'
-import { useAuth } from '../context/AuthContext'
+import { Trophy } from 'lucide-react'
 
 export default function Ranking() {
   const [teams, setTeams] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const { profile } = useAuth()
 
   useEffect(() => {
     async function fetchRanking() {
@@ -46,41 +44,20 @@ export default function Ranking() {
   const initialCapital = 10000000.00
 
   return (
-    <div className="min-h-screen p-8 max-w-7xl mx-auto space-y-8">
+    <div className="max-w-7xl mx-auto space-y-8">
       {/* Background glow effects */}
       <div className="absolute top-0 right-1/4 w-[400px] h-[400px] bg-indigo-500/5 rounded-full blur-[100px] pointer-events-none"></div>
       <div className="absolute top-1/2 left-0 w-[300px] h-[300px] bg-purple-500/5 rounded-full blur-[120px] pointer-events-none"></div>
 
-      {/* Navigation Header */}
-      <header className="glass-card rounded-2xl p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border border-white/5 shadow-2xl relative z-10">
-        <div>
-          <span className="text-xs font-semibold text-indigo-400 uppercase tracking-widest">Classificação da Competição</span>
-          <h1 className="text-3xl font-black text-white tracking-tight mt-0.5">Leaderboard</h1>
-          <p className="text-slate-400 text-xs mt-1">Acompanhe a rentabilidade e o patrimônio acumulado de todas as equipes.</p>
+      {/* Header */}
+      <div className="glass-card rounded-2xl p-6 border border-white/5 shadow-2xl relative z-10">
+        <div className="flex items-center gap-2 text-indigo-400 text-xs font-semibold uppercase tracking-widest">
+          <Trophy size={16} />
+          <span>Classificação da Competição</span>
         </div>
-        <nav className="flex gap-2">
-          <Link
-            to="/"
-            className="px-4 py-2.5 bg-slate-800/80 hover:bg-slate-700/80 border border-white/5 text-slate-200 rounded-xl font-bold text-xs transition-all cursor-pointer"
-          >
-            Ver Carteira
-          </Link>
-          <Link
-            to="/mercado"
-            className="px-4 py-2.5 bg-slate-800/80 hover:bg-slate-700/80 border border-white/5 text-slate-200 rounded-xl font-bold text-xs transition-all cursor-pointer"
-          >
-            Mercado
-          </Link>
-          {profile?.role === 'admin' && (
-            <Link
-              to="/admin"
-              className="px-4 py-2.5 bg-slate-800/80 hover:bg-slate-700/80 border border-white/5 text-indigo-300 rounded-xl font-bold text-xs transition-all cursor-pointer"
-            >
-              Painel Admin
-            </Link>
-          )}
-        </nav>
-      </header>
+        <h1 className="text-3xl font-black text-white tracking-tight mt-1">Leaderboard</h1>
+        <p className="text-slate-400 text-xs mt-1">Acompanhe a rentabilidade e o patrimônio acumulado de todas as equipes.</p>
+      </div>
 
       {loading ? (
         <div className="text-center py-16 text-slate-500">Carregando classificação geral...</div>
@@ -114,7 +91,6 @@ export default function Ranking() {
             {/* 1st Place (Center & Taller) */}
             {top1 && (
               <div className="glass-card rounded-2xl p-8 border border-indigo-500/20 shadow-2xl text-center space-y-4 md:order-2 h-[290px] flex flex-col justify-end relative bg-gradient-to-b from-indigo-950/20 via-slate-900/40 to-slate-900/60 hover:border-indigo-500/35 transition-all">
-                {/* Glowing neon crown */}
                 <div className="absolute -top-8 left-1/2 -translate-x-1/2 w-14 h-14 rounded-full bg-yellow-500/10 border-2 border-yellow-500 text-yellow-500 font-black flex items-center justify-center text-xl shadow-lg shadow-yellow-500/20">👑</div>
                 <h3 className="font-black text-white text-2xl truncate px-2">{top1.name}</h3>
                 <div className="space-y-1.5">
@@ -154,11 +130,11 @@ export default function Ranking() {
                 <table className="w-full text-left border-collapse text-sm">
                   <thead>
                     <tr className="border-b border-white/5 text-slate-450 text-xs font-bold uppercase tracking-wider">
-                      <th className="py-3 w-16 text-center">Posição</th>
-                      <th className="py-3">Equipe</th>
-                      <th className="py-3 text-right">Patrimônio Líquido</th>
-                      <th className="py-3 text-right">Retorno Total</th>
-                      <th className="py-3 text-right">Rentabilidade</th>
+                      <th className="py-3 px-4 sm:px-6 w-16 text-center">Posição</th>
+                      <th className="py-3 px-4 sm:px-6">Equipe</th>
+                      <th className="py-3 px-4 sm:px-6 text-right min-w-[130px]">Patrimônio Líquido</th>
+                      <th className="py-3 px-4 sm:px-6 text-right min-w-[130px]">Retorno Total</th>
+                      <th className="py-3 px-4 sm:px-6 text-right min-w-[110px]">Rentabilidade</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
@@ -169,15 +145,15 @@ export default function Ranking() {
 
                       return (
                         <tr key={team.id} className="hover:bg-white/[0.02] transition-colors">
-                          <td className="py-3.5 text-center">
+                          <td className="py-3.5 px-4 sm:px-6 text-center">
                             <span className="text-slate-400 font-semibold">{position}º</span>
                           </td>
-                          <td className="py-3.5 font-bold text-slate-200">{team.name}</td>
-                          <td className="py-3.5 text-right font-medium text-slate-350">{formatBRL(team.net_worth)}</td>
-                          <td className={`py-3.5 text-right font-bold ${profit >= 0 ? 'text-emerald-450' : 'text-rose-450'}`}>
+                          <td className="py-3.5 px-4 sm:px-6 font-bold text-slate-200">{team.name}</td>
+                          <td className="py-3.5 px-4 sm:px-6 text-right font-medium text-slate-350 whitespace-nowrap">{formatBRL(team.net_worth)}</td>
+                          <td className={`py-3.5 px-4 sm:px-6 text-right font-bold whitespace-nowrap ${profit >= 0 ? 'text-emerald-450' : 'text-rose-450'}`}>
                             {profit >= 0 ? '+' : ''}{formatBRL(profit)}
                           </td>
-                          <td className={`py-3.5 text-right font-bold ${yieldPercent >= 0 ? 'text-emerald-450' : 'text-rose-450'}`}>
+                          <td className={`py-3.5 px-4 sm:px-6 text-right font-bold whitespace-nowrap ${yieldPercent >= 0 ? 'text-emerald-450' : 'text-rose-450'}`}>
                             {yieldPercent >= 0 ? '+' : ''}{yieldPercent.toFixed(2)}%
                           </td>
                         </tr>

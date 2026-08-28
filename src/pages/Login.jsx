@@ -84,14 +84,11 @@ export default function Login() {
 
       <div className="glass-card rounded-2xl max-w-md w-full p-8 shadow-2xl space-y-6 relative z-10 border border-white/5">
         
-        {/* Logo and Greeting */}
-        <div className="text-center space-y-1">
+        {/* Logo */}
+        <div className="text-center">
           <h1 className="text-4xl font-black tracking-tight text-white bg-clip-text text-transparent bg-gradient-to-r from-white via-indigo-200 to-indigo-400">
             app_carteira
           </h1>
-          <p className="text-xs text-slate-400">
-            Simulador de Competições de Investimentos B3
-          </p>
         </div>
 
         {/* Tab Selection */}
@@ -149,22 +146,20 @@ export default function Login() {
                 <label className="block text-xs font-medium text-slate-400 mb-1.5 pl-1">Nome da Equipe</label>
                 <input
                   type="text"
-                  placeholder="Ex: Equipe Tubarões"
                   value={newTeamName}
                   onChange={(e) => setNewTeamName(e.target.value)}
-                  className="w-full bg-slate-950/50 border border-white/5 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 transition-all placeholder-slate-650"
+                  className="w-full bg-slate-950/50 border border-white/5 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 transition-all"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1.5 pl-1">Seu Nome Completo</label>
+                <label className="block text-xs font-medium text-slate-400 mb-1.5 pl-1">Nome Completo</label>
                 <input
                   type="text"
-                  placeholder="Ex: João Silva"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full bg-slate-950/50 border border-white/5 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 transition-all placeholder-slate-650"
+                  className="w-full bg-slate-950/50 border border-white/5 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 transition-all"
                   required
                 />
               </div>
@@ -175,10 +170,9 @@ export default function Login() {
             <label className="block text-xs font-medium text-slate-400 mb-1.5 pl-1">E-mail</label>
             <input
               type="email"
-              placeholder="seuemail@exemplo.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-slate-950/50 border border-white/5 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 transition-all placeholder-slate-650"
+              className="w-full bg-slate-950/50 border border-white/5 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 transition-all"
               required
             />
           </div>
@@ -187,10 +181,9 @@ export default function Login() {
             <label className="block text-xs font-medium text-slate-400 mb-1.5 pl-1">Senha</label>
             <input
               type="password"
-              placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-slate-950/50 border border-white/5 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 transition-all placeholder-slate-650"
+              className="w-full bg-slate-950/50 border border-white/5 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 transition-all"
               required
             />
           </div>
@@ -203,14 +196,10 @@ export default function Login() {
             {loading 
               ? 'Processando...' 
               : activeTab === 'register' 
-                ? 'Criar Equipe e Registrar' 
-                : 'Entrar na Plataforma'}
+                ? 'Criar Equipe' 
+                : 'Entrar'}
           </button>
         </form>
-
-        <div className="text-center text-[10px] text-slate-550">
-          Protegido por políticas de segurança RLS (Row Level Security).
-        </div>
 
       </div>
     </div>
