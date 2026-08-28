@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../services/supabase'
-import { Trophy } from 'lucide-react'
+import SpotlightCard from '../components/ui/SpotlightCard'
+import { Trophy, Medal, Crown } from 'lucide-react'
 
 export default function Ranking() {
   const [teams, setTeams] = useState([])
@@ -35,7 +36,6 @@ export default function Ranking() {
     }).format(val || 0)
   }
 
-  // Split into Top 3 and Others
   const top1 = teams[0]
   const top2 = teams[1]
   const top3 = teams[2]
@@ -44,88 +44,118 @@ export default function Ranking() {
   const initialCapital = 10000000.00
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8">
-      {/* Background glow effects */}
-      <div className="absolute top-0 right-1/4 w-[400px] h-[400px] bg-indigo-500/5 rounded-full blur-[100px] pointer-events-none"></div>
-      <div className="absolute top-1/2 left-0 w-[300px] h-[300px] bg-purple-500/5 rounded-full blur-[120px] pointer-events-none"></div>
-
+    <div className="max-w-7xl mx-auto space-y-10">
+      
       {/* Header */}
-      <div className="glass-card rounded-2xl p-6 border border-white/5 shadow-2xl relative z-10">
-        <div className="flex items-center gap-2 text-indigo-400 text-xs font-semibold uppercase tracking-widest">
-          <Trophy size={16} />
-          <span>Classificação da Competição</span>
+      <div>
+        <div className="flex items-center gap-2 text-indigo-400 text-xs font-bold uppercase tracking-widest">
+          <Trophy size={14} />
+          <span>Competição B3</span>
         </div>
-        <h1 className="text-3xl font-black text-white tracking-tight mt-1">Leaderboard</h1>
-        <p className="text-slate-400 text-xs mt-1">Acompanhe a rentabilidade e o patrimônio acumulado de todas as equipes.</p>
+        <h1 className="text-3xl font-black text-white tracking-tight mt-1">Classificação Geral</h1>
+        <p className="text-slate-400 text-xs mt-1">Ranking ao vivo baseado no Patrimônio Líquido consolidado.</p>
       </div>
 
       {loading ? (
-        <div className="text-center py-16 text-slate-500">Carregando classificação geral...</div>
+        <div className="text-center py-20 text-slate-500">Carregando posições da competição...</div>
       ) : error ? (
-        <div className="text-center py-16 text-rose-450">{error}</div>
+        <div className="text-center py-20 text-rose-450">{error}</div>
       ) : teams.length === 0 ? (
-        <div className="text-center py-16 text-slate-500">Nenhuma equipe registrada na competição.</div>
+        <div className="text-center py-20 text-slate-500">Nenhuma equipe registrada na competição.</div>
       ) : (
-        <main className="space-y-12 relative z-10">
+        <main className="space-y-12">
           
-          {/* TOP 3 PODIUM */}
+          {/* 3D PEDESTAL PODIUM */}
           <section className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end max-w-4xl mx-auto pt-6">
             
-            {/* 2nd Place */}
+            {/* 2nd Place (Silver Pedestal) */}
             {top2 ? (
-              <div className="glass-card rounded-2xl p-6 border border-white/5 shadow-xl text-center space-y-4 md:order-1 h-[240px] flex flex-col justify-end relative group hover:border-indigo-500/20 transition-all">
-                <div className="absolute -top-5 left-1/2 -translate-x-1/2 w-10 h-10 rounded-full bg-slate-400/20 border border-slate-300 text-slate-200 font-black flex items-center justify-center text-sm shadow-md">2</div>
-                <h3 className="font-extrabold text-white text-lg truncate px-2">{top2.name}</h3>
+              <SpotlightCard 
+                spotlightColor="rgba(148, 163, 184, 0.2)"
+                className="p-6 text-center space-y-4 md:order-1 h-[250px] flex flex-col justify-between border-slate-700/60 bg-gradient-to-t from-slate-900/90 to-slate-900/40 relative"
+              >
+                <div className="flex justify-center -mt-10">
+                  <div className="w-12 h-12 rounded-2xl bg-slate-800 border-2 border-slate-400 text-slate-200 font-black flex items-center justify-center text-base shadow-xl shadow-slate-900">
+                    <Medal size={20} className="text-slate-300" />
+                  </div>
+                </div>
                 <div className="space-y-1">
-                  <span className="text-[10px] text-slate-450 uppercase font-bold tracking-wider block">Patrimônio Líquido</span>
-                  <span className="text-xl font-black text-slate-100 block">{formatBRL(top2.net_worth)}</span>
-                  <span className={`text-xs font-bold ${top2.net_worth - initialCapital >= 0 ? 'text-emerald-450' : 'text-rose-450'}`}>
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">2º Colocado</span>
+                  <h3 className="font-extrabold text-white text-lg truncate px-2">{top2.name}</h3>
+                </div>
+                <div className="space-y-1 pt-2 border-t border-white/5">
+                  <span className="text-xl font-black text-white block">{formatBRL(top2.net_worth)}</span>
+                  <span className={`text-xs font-bold ${top2.net_worth - initialCapital >= 0 ? 'text-emerald-400' : 'text-rose-450'}`}>
                     {top2.net_worth - initialCapital >= 0 ? '+' : ''}{((top2.net_worth - initialCapital) / initialCapital * 100).toFixed(2)}%
                   </span>
                 </div>
-              </div>
+              </SpotlightCard>
             ) : (
-              <div className="hidden md:block md:order-1 h-[240px]"></div>
+              <div className="hidden md:block md:order-1 h-[250px]"></div>
             )}
 
-            {/* 1st Place (Center & Taller) */}
+            {/* 1st Place (Gold Center Pedestal - Taller & Glowing) */}
             {top1 && (
-              <div className="glass-card rounded-2xl p-8 border border-indigo-500/20 shadow-2xl text-center space-y-4 md:order-2 h-[290px] flex flex-col justify-end relative bg-gradient-to-b from-indigo-950/20 via-slate-900/40 to-slate-900/60 hover:border-indigo-500/35 transition-all">
-                <div className="absolute -top-8 left-1/2 -translate-x-1/2 w-14 h-14 rounded-full bg-yellow-500/10 border-2 border-yellow-500 text-yellow-500 font-black flex items-center justify-center text-xl shadow-lg shadow-yellow-500/20">👑</div>
-                <h3 className="font-black text-white text-2xl truncate px-2">{top1.name}</h3>
-                <div className="space-y-1.5">
-                  <span className="text-[10px] text-indigo-400 uppercase font-bold tracking-widest block">Líder do Ranking</span>
+              <SpotlightCard 
+                spotlightColor="rgba(234, 179, 8, 0.25)"
+                className="p-7 text-center space-y-4 md:order-2 h-[310px] flex flex-col justify-between border-yellow-500/40 bg-gradient-to-t from-yellow-950/30 via-slate-900/80 to-slate-900/50 shadow-2xl relative"
+              >
+                <div className="flex justify-center -mt-12">
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-yellow-600 via-yellow-500 to-amber-300 text-slate-950 font-black flex items-center justify-center text-xl shadow-2xl shadow-yellow-500/30 border-2 border-white/40 animate-pulse">
+                    <Crown size={28} className="text-slate-950" />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-[10px] text-yellow-400 font-black uppercase tracking-widest bg-yellow-950/60 px-3 py-1 rounded-full border border-yellow-500/30">
+                    Líder da Competição
+                  </span>
+                  <h3 className="font-black text-white text-2xl truncate px-2 mt-1">{top1.name}</h3>
+                </div>
+                <div className="space-y-1.5 pt-3 border-t border-yellow-500/20">
                   <span className="text-2xl font-black text-white block">{formatBRL(top1.net_worth)}</span>
-                  <span className={`text-sm font-bold ${top1.net_worth - initialCapital >= 0 ? 'text-emerald-450' : 'text-rose-450'}`}>
+                  <span className={`text-sm font-black ${top1.net_worth - initialCapital >= 0 ? 'text-emerald-400' : 'text-rose-450'}`}>
                     {top1.net_worth - initialCapital >= 0 ? '+' : ''}{((top1.net_worth - initialCapital) / initialCapital * 100).toFixed(2)}%
                   </span>
                 </div>
-              </div>
+              </SpotlightCard>
             )}
 
-            {/* 3rd Place */}
+            {/* 3rd Place (Bronze Pedestal) */}
             {top3 ? (
-              <div className="glass-card rounded-2xl p-6 border border-white/5 shadow-xl text-center space-y-4 md:order-3 h-[210px] flex flex-col justify-end relative group hover:border-indigo-500/20 transition-all">
-                <div className="absolute -top-5 left-1/2 -translate-x-1/2 w-10 h-10 rounded-full bg-amber-700/20 border border-amber-600 text-amber-500 font-black flex items-center justify-center text-sm shadow-md">3</div>
-                <h3 className="font-extrabold text-white text-md truncate px-2">{top3.name}</h3>
+              <SpotlightCard 
+                spotlightColor="rgba(217, 119, 6, 0.2)"
+                className="p-6 text-center space-y-4 md:order-3 h-[230px] flex flex-col justify-between border-amber-800/60 bg-gradient-to-t from-slate-900/90 to-slate-900/40 relative"
+              >
+                <div className="flex justify-center -mt-10">
+                  <div className="w-12 h-12 rounded-2xl bg-slate-800 border-2 border-amber-600 text-amber-500 font-black flex items-center justify-center text-base shadow-xl shadow-slate-900">
+                    <Medal size={20} className="text-amber-500" />
+                  </div>
+                </div>
                 <div className="space-y-1">
-                  <span className="text-[10px] text-slate-450 uppercase font-bold tracking-wider block">Patrimônio Líquido</span>
-                  <span className="text-lg font-black text-slate-200 block">{formatBRL(top3.net_worth)}</span>
-                  <span className={`text-xs font-bold ${top3.net_worth - initialCapital >= 0 ? 'text-emerald-450' : 'text-rose-450'}`}>
+                  <span className="text-[10px] text-amber-500/90 font-bold uppercase tracking-widest">3º Colocado</span>
+                  <h3 className="font-extrabold text-white text-base truncate px-2">{top3.name}</h3>
+                </div>
+                <div className="space-y-1 pt-2 border-t border-white/5">
+                  <span className="text-lg font-black text-white block">{formatBRL(top3.net_worth)}</span>
+                  <span className={`text-xs font-bold ${top3.net_worth - initialCapital >= 0 ? 'text-emerald-400' : 'text-rose-450'}`}>
                     {top3.net_worth - initialCapital >= 0 ? '+' : ''}{((top3.net_worth - initialCapital) / initialCapital * 100).toFixed(2)}%
                   </span>
                 </div>
-              </div>
+              </SpotlightCard>
             ) : (
-              <div className="hidden md:block md:order-3 h-[210px]"></div>
+              <div className="hidden md:block md:order-3 h-[230px]"></div>
             )}
 
           </section>
 
           {/* OTHER POSITIONS TABLE */}
           {otherTeams.length > 0 && (
-            <section className="glass-card rounded-2xl p-6 border border-white/5 shadow-xl space-y-6">
-              <h2 className="text-lg font-bold text-white tracking-tight border-b border-white/5 pb-3">Demais Classificações</h2>
+            <SpotlightCard className="p-6 space-y-5">
+              <div className="flex items-center justify-between border-b border-white/5 pb-3">
+                <h2 className="text-lg font-bold text-white tracking-tight">Demais Participantes</h2>
+                <span className="text-xs text-slate-500">{otherTeams.length} equipes</span>
+              </div>
+
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse text-sm">
                   <thead>
@@ -133,7 +163,7 @@ export default function Ranking() {
                       <th className="py-3 px-4 sm:px-6 w-16 text-center">Posição</th>
                       <th className="py-3 px-4 sm:px-6">Equipe</th>
                       <th className="py-3 px-4 sm:px-6 text-right min-w-[130px]">Patrimônio Líquido</th>
-                      <th className="py-3 px-4 sm:px-6 text-right min-w-[130px]">Retorno Total</th>
+                      <th className="py-3 px-4 sm:px-6 text-right min-w-[130px]">Lucro/Prejuízo</th>
                       <th className="py-3 px-4 sm:px-6 text-right min-w-[110px]">Rentabilidade</th>
                     </tr>
                   </thead>
@@ -146,14 +176,16 @@ export default function Ranking() {
                       return (
                         <tr key={team.id} className="hover:bg-white/[0.02] transition-colors">
                           <td className="py-3.5 px-4 sm:px-6 text-center">
-                            <span className="text-slate-400 font-semibold">{position}º</span>
+                            <span className="w-7 h-7 rounded-lg bg-slate-950 border border-white/10 text-slate-400 font-bold text-xs inline-flex items-center justify-center">
+                              {position}º
+                            </span>
                           </td>
                           <td className="py-3.5 px-4 sm:px-6 font-bold text-slate-200">{team.name}</td>
                           <td className="py-3.5 px-4 sm:px-6 text-right font-medium text-slate-350 whitespace-nowrap">{formatBRL(team.net_worth)}</td>
                           <td className={`py-3.5 px-4 sm:px-6 text-right font-bold whitespace-nowrap ${profit >= 0 ? 'text-emerald-450' : 'text-rose-450'}`}>
                             {profit >= 0 ? '+' : ''}{formatBRL(profit)}
                           </td>
-                          <td className={`py-3.5 px-4 sm:px-6 text-right font-bold whitespace-nowrap ${yieldPercent >= 0 ? 'text-emerald-450' : 'text-rose-450'}`}>
+                          <td className={`py-3.5 px-4 sm:px-6 text-right font-bold whitespace-nowrap ${yieldPercent >= 0 ? 'text-emerald-400' : 'text-rose-450'}`}>
                             {yieldPercent >= 0 ? '+' : ''}{yieldPercent.toFixed(2)}%
                           </td>
                         </tr>
@@ -162,7 +194,7 @@ export default function Ranking() {
                   </tbody>
                 </table>
               </div>
-            </section>
+            </SpotlightCard>
           )}
 
         </main>

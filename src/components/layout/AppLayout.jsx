@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import usePortfolio from '../../hooks/usePortfolio'
+import BackgroundPattern from '../ui/BackgroundPattern'
 
 export default function AppLayout() {
   const { signOut, profile } = useAuth()
@@ -41,6 +42,7 @@ export default function AppLayout() {
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-[#030712] text-slate-100 relative">
+      <BackgroundPattern />
       
       {/* Mobile Top Bar */}
       <header className="md:hidden glass-card sticky top-0 z-40 px-6 py-4 flex items-center justify-between border-b border-white/5">
