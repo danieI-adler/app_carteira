@@ -86,23 +86,28 @@ export default function Admin() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 p-8">
+    <div className="min-h-screen p-8 max-w-7xl mx-auto space-y-8">
+      {/* Background glow effects */}
+      <div className="absolute top-0 right-1/4 w-[400px] h-[400px] bg-indigo-500/5 rounded-full blur-[100px] pointer-events-none"></div>
+      <div className="absolute top-1/2 left-0 w-[300px] h-[300px] bg-purple-500/5 rounded-full blur-[120px] pointer-events-none"></div>
+
       {/* Navigation Header */}
-      <header className="max-w-7xl mx-auto flex justify-between items-center border-b border-slate-800 pb-6 mb-8">
+      <header className="glass-card rounded-2xl p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border border-white/5 shadow-2xl relative z-10">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-white">Painel do Administrador</h1>
-          <p className="text-slate-400 mt-1">Configuração e controle operacional do app_carteira.</p>
+          <span className="text-xs font-semibold text-indigo-400 uppercase tracking-widest">Painel Operacional</span>
+          <h1 className="text-3xl font-black text-white tracking-tight mt-0.5">Administração</h1>
+          <p className="text-slate-400 text-xs mt-1">Configuração, gerenciamento de equipes e usuários.</p>
         </div>
-        <nav className="flex gap-4">
+        <nav className="flex gap-2">
           <Link
             to="/"
-            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg font-medium text-sm transition-colors"
+            className="px-4 py-2.5 bg-slate-800/80 hover:bg-slate-700/80 border border-white/5 text-slate-200 rounded-xl font-bold text-xs transition-all cursor-pointer"
           >
             Ver Carteira
           </Link>
           <Link
             to="/mercado"
-            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg font-medium text-sm transition-colors"
+            className="px-4 py-2.5 bg-slate-800/80 hover:bg-slate-700/80 border border-white/5 text-slate-200 rounded-xl font-bold text-xs transition-all cursor-pointer"
           >
             Mercado
           </Link>
@@ -110,29 +115,29 @@ export default function Admin() {
       </header>
 
       {loading ? (
-        <div className="text-center py-12 text-slate-500">Carregando painel administrativo...</div>
+        <div className="text-center py-16 text-slate-500">Carregando painel administrativo...</div>
       ) : (
-        <main className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <main className="grid grid-cols-1 lg:grid-cols-3 gap-8 relative z-10">
           
           {/* Create Team Form */}
-          <section className="bg-slate-800 border border-slate-700/50 rounded-xl p-6 shadow-sm h-fit">
-            <h2 className="text-lg font-semibold text-white mb-4">Criar Nova Equipe</h2>
+          <section className="glass-card rounded-2xl p-6 border border-white/5 shadow-xl h-fit space-y-4">
+            <h2 className="text-lg font-bold text-white tracking-tight border-b border-white/5 pb-3">Criar Nova Equipe</h2>
             <form onSubmit={handleCreateTeam} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1.5">Nome da Equipe</label>
+                <label className="block text-xs font-medium text-slate-400 mb-1.5 pl-1">Nome da Equipe</label>
                 <input
                   type="text"
                   placeholder="Ex: Equipe Libra"
                   value={newTeamName}
                   onChange={(e) => setNewTeamName(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500"
+                  className="w-full bg-slate-950/50 border border-white/5 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 transition-all placeholder-slate-650"
                   required
                 />
               </div>
               <button
                 type="submit"
                 disabled={creating}
-                className="w-full py-2 bg-indigo-600 hover:bg-indigo-755 text-white rounded-lg font-bold text-sm transition-colors disabled:opacity-50 cursor-pointer"
+                className="w-full py-3.5 btn-neon text-white rounded-xl font-bold text-sm transition-all cursor-pointer"
               >
                 {creating ? 'Criando...' : 'Salvar Equipe'}
               </button>
@@ -140,47 +145,47 @@ export default function Admin() {
           </section>
 
           {/* Users & Team Assignment List */}
-          <section className="bg-slate-800 border border-slate-700/50 rounded-xl p-6 shadow-sm lg:col-span-2 space-y-6">
+          <section className="glass-card rounded-2xl p-6 border border-white/5 shadow-xl lg:col-span-2 space-y-6">
             <div>
-              <h2 className="text-lg font-semibold text-white">Vincular Usuários às Equipes</h2>
+              <h2 className="text-lg font-bold text-white tracking-tight">Vincular Usuários</h2>
               <p className="text-xs text-slate-400 mt-1">Gerencie os participantes e defina a qual equipe pertencem.</p>
             </div>
 
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse text-sm">
                 <thead>
-                  <tr className="border-b border-slate-700 text-slate-400">
-                    <th className="py-2.5">Nome</th>
-                    <th className="py-2.5">Função</th>
-                    <th className="py-2.5">Equipe Atual</th>
-                    <th className="py-2.5 text-right">Alterar Equipe</th>
+                  <tr className="border-b border-white/5 text-slate-450 text-xs font-bold uppercase tracking-wider">
+                    <th className="py-3">Nome</th>
+                    <th className="py-3">Função</th>
+                    <th className="py-3">Equipe Atual</th>
+                    <th className="py-3 text-right">Alterar Equipe</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-white/5">
                   {profiles.map((profile) => (
-                    <tr key={profile.id} className="border-b border-slate-800 hover:bg-slate-750/30">
-                      <td className="py-3 text-slate-200 font-semibold">{profile.name}</td>
-                      <td className="py-3 capitalize text-slate-450 text-xs">
+                    <tr key={profile.id} className="hover:bg-white/[0.02] transition-colors">
+                      <td className="py-3.5 text-slate-200 font-bold">{profile.name}</td>
+                      <td className="py-3.5 capitalize text-xs">
                         {profile.role === 'admin' ? (
-                          <span className="bg-indigo-950/40 text-indigo-400 px-2 py-0.5 rounded border border-indigo-900/30">
+                          <span className="bg-indigo-950/40 text-indigo-400 px-2.5 py-0.5 rounded-lg border border-indigo-900/30 font-black uppercase text-[10px]">
                             Admin
                           </span>
                         ) : (
-                          'Participante'
+                          <span className="text-slate-400 font-medium">Participante</span>
                         )}
                       </td>
-                      <td className="py-3 text-slate-300 font-medium">
-                        {profile.teams?.name || <span className="text-slate-500 italic">Sem Equipe</span>}
+                      <td className="py-3.5 text-slate-300 font-bold text-xs">
+                        {profile.teams?.name || <span className="text-slate-550 italic font-normal">Sem Equipe</span>}
                       </td>
-                      <td className="py-3 text-right">
+                      <td className="py-3.5 text-right">
                         <select
                           value={profile.team_id || ''}
                           onChange={(e) => handleUpdateUserTeam(profile.id, e.target.value)}
-                          className="bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-slate-350 focus:outline-none"
+                          className="bg-slate-950/50 border border-white/5 rounded-xl px-3 py-1.5 text-xs text-slate-350 focus:outline-none"
                         >
-                          <option value="">-- Remover da Equipe --</option>
+                          <option value="" className="bg-slate-900 text-slate-300">-- Sem Equipe --</option>
                           {teams.map((team) => (
-                            <option key={team.id} value={team.id}>
+                            <option key={team.id} value={team.id} className="bg-slate-900 text-slate-300">
                               {team.name}
                             </option>
                           ))}

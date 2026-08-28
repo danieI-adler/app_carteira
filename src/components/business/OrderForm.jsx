@@ -65,102 +65,108 @@ export default function OrderForm({ onCreateOrder }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-slate-800 border border-slate-700/50 rounded-xl p-6 shadow-sm space-y-4">
-      <h2 className="text-lg font-semibold text-white mb-2">Enviar Nova Ordem</h2>
+    <form onSubmit={handleSubmit} className="glass-card rounded-2xl p-6 border border-white/5 shadow-xl space-y-4">
+      <h2 className="text-lg font-bold text-white tracking-tight border-b border-white/5 pb-3">Painel de Ordens</h2>
 
       {/* Ativo */}
       <div>
-        <label className="block text-xs font-medium text-slate-400 mb-1">Selecione o Ativo</label>
+        <label className="block text-xs font-medium text-slate-400 mb-1.5 pl-1">Selecionar Ativo</label>
         <select
           value={selectedSymbol}
           onChange={(e) => setSelectedSymbol(e.target.value)}
-          className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500"
+          className="w-full bg-slate-950/50 border border-white/5 rounded-xl px-3.5 py-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20"
         >
           {assets.map((a) => (
-            <option key={a.symbol} value={a.symbol}>
-              {a.symbol} - {a.name} (R$ {a.last_price.toFixed(2)})
+            <option key={a.symbol} value={a.symbol} className="bg-slate-900 text-slate-200">
+              {a.symbol} - R$ {a.last_price.toFixed(2)}
             </option>
           ))}
         </select>
       </div>
 
       {/* Operação */}
-      <div className="grid grid-cols-2 gap-2">
-        <button
-          type="button"
-          onClick={() => setSide('buy')}
-          className={`py-2 rounded-lg font-semibold text-xs transition-colors border ${
-            side === 'buy'
-              ? 'bg-emerald-950/40 text-emerald-400 border-emerald-800'
-              : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-slate-350'
-          }`}
-        >
-          Compra
-        </button>
-        <button
-          type="button"
-          onClick={() => setSide('sell')}
-          className={`py-2 rounded-lg font-semibold text-xs transition-colors border ${
-            side === 'sell'
-              ? 'bg-rose-950/40 text-rose-450 border-rose-900'
-              : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-slate-350'
-          }`}
-        >
-          Venda
-        </button>
-        <button
-          type="button"
-          onClick={() => setSide('short')}
-          className={`py-2 rounded-lg font-semibold text-xs transition-colors border ${
-            side === 'short'
-              ? 'bg-indigo-950/40 text-indigo-400 border-indigo-900'
-              : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-slate-350'
-          }`}
-        >
-          Venda a Descoberto
-        </button>
-        <button
-          type="button"
-          onClick={() => setSide('cover')}
-          className={`py-2 rounded-lg font-semibold text-xs transition-colors border ${
-            side === 'cover'
-              ? 'bg-amber-950/40 text-amber-400 border-amber-900'
-              : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-slate-350'
-          }`}
-        >
-          Cobrir Short
-        </button>
+      <div>
+        <label className="block text-xs font-medium text-slate-400 mb-1.5 pl-1">Tipo de Operação</label>
+        <div className="grid grid-cols-2 gap-1.5 bg-slate-950/80 p-1 rounded-xl border border-white/5">
+          <button
+            type="button"
+            onClick={() => setSide('buy')}
+            className={`py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              side === 'buy'
+                ? 'bg-emerald-950/65 text-emerald-400 border border-emerald-900/30'
+                : 'text-slate-450 hover:text-slate-250'
+            }`}
+          >
+            Compra
+          </button>
+          <button
+            type="button"
+            onClick={() => setSide('sell')}
+            className={`py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              side === 'sell'
+                ? 'bg-rose-950/65 text-rose-450 border border-rose-900/30'
+                : 'text-slate-450 hover:text-slate-250'
+            }`}
+          >
+            Venda
+          </button>
+          <button
+            type="button"
+            onClick={() => setSide('short')}
+            className={`py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              side === 'short'
+                ? 'bg-indigo-950/65 text-indigo-450 border border-indigo-900/30'
+                : 'text-slate-450 hover:text-slate-250'
+            }`}
+          >
+            Aluguel (Short)
+          </button>
+          <button
+            type="button"
+            onClick={() => setSide('cover')}
+            className={`py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              side === 'cover'
+                ? 'bg-amber-950/65 text-amber-400 border border-amber-900/30'
+                : 'text-slate-450 hover:text-slate-250'
+            }`}
+          >
+            Cobrir
+          </button>
+        </div>
       </div>
 
       {/* Tipo de Ordem */}
-      <div className="grid grid-cols-2 gap-2">
-        <button
-          type="button"
-          onClick={() => setOrderType('market')}
-          className={`py-1.5 rounded-lg text-xs font-medium border ${
-            orderType === 'market'
-              ? 'bg-slate-700 text-white border-slate-600'
-              : 'bg-slate-900 text-slate-400 border-slate-800'
-          }`}
-        >
-          A Mercado
-        </button>
-        <button
-          type="button"
-          onClick={() => setOrderType('limit')}
-          className={`py-1.5 rounded-lg text-xs font-medium border ${
-            orderType === 'limit'
-              ? 'bg-slate-700 text-white border-slate-600'
-              : 'bg-slate-900 text-slate-400 border-slate-800'
-          }`}
-        >
-          Limitada
-        </button>
+      <div>
+        <label className="block text-xs font-medium text-slate-400 mb-1.5 pl-1">Execução</label>
+        <div className="grid grid-cols-2 gap-1.5 bg-slate-950/80 p-1 rounded-xl border border-white/5">
+          <button
+            type="button"
+            onClick={() => setOrderType('market')}
+            className={`py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              orderType === 'market'
+                ? 'bg-slate-800 text-white shadow-sm border border-white/5'
+                : 'text-slate-450 hover:text-slate-250'
+            }`}
+          >
+            A Mercado
+          </button>
+          <button
+            type="button"
+            onClick={() => setOrderType('limit')}
+            className={`py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              orderType === 'limit'
+                ? 'bg-slate-800 text-white shadow-sm border border-white/5'
+                : 'text-slate-450 hover:text-slate-250'
+            }`}
+          >
+            Limitada
+          </button>
+        </div>
       </div>
 
       {/* Quantidade */}
       <div>
-        <label className="block text-xs font-medium text-slate-400 mb-1">Quantidade</label>
+        <label className="block text-xs font-medium text-slate-400 mb-1.5 pl-1">Quantidade</label>
         <input
           type="number"
           min="1"
@@ -168,7 +174,7 @@ export default function OrderForm({ onCreateOrder }) {
           placeholder="Ex: 100"
           value={quantity}
           onChange={(e) => setQuantity(e.target.value)}
-          className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500"
+          className="w-full bg-slate-950/50 border border-white/5 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 transition-all placeholder-slate-650"
           required
         />
       </div>
@@ -176,7 +182,7 @@ export default function OrderForm({ onCreateOrder }) {
       {/* Preço Limite */}
       {orderType === 'limit' && (
         <div>
-          <label className="block text-xs font-medium text-slate-400 mb-1">Preço Limite (R$)</label>
+          <label className="block text-xs font-medium text-slate-400 mb-1.5 pl-1">Preço Limite (R$)</label>
           <input
             type="number"
             min="0.01"
@@ -184,7 +190,7 @@ export default function OrderForm({ onCreateOrder }) {
             placeholder="Ex: 35.50"
             value={limitPrice}
             onChange={(e) => setLimitPrice(e.target.value)}
-            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500"
+            className="w-full bg-slate-950/50 border border-white/5 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 transition-all placeholder-slate-650"
             required
           />
         </div>
@@ -192,14 +198,14 @@ export default function OrderForm({ onCreateOrder }) {
 
       {/* Estimativas rápidas */}
       {selectedAsset && quantity && (
-        <div className="bg-slate-900/50 p-3 rounded-lg border border-slate-850 text-xs text-slate-400 space-y-1">
-          <div className="flex justify-between">
-            <span>Preço de Referência:</span>
-            <span className="text-slate-200">R$ {selectedAsset.last_price.toFixed(2)}</span>
+        <div className="bg-slate-950/55 p-4 rounded-xl border border-white/5 text-xs text-slate-400 space-y-2">
+          <div className="flex justify-between items-center">
+            <span>Preço Unitário:</span>
+            <span className="text-slate-200 font-medium">R$ {selectedAsset.last_price.toFixed(2)}</span>
           </div>
-          <div className="flex justify-between font-semibold border-t border-slate-850 pt-1 mt-1">
-            <span>Estimativa Total:</span>
-            <span className="text-white">
+          <div className="flex justify-between items-center font-bold border-t border-white/5 pt-2 mt-2">
+            <span>Volume Estimado:</span>
+            <span className="text-white text-sm">
               R$ {(parseFloat(quantity) * (orderType === 'limit' && limitPrice ? parseFloat(limitPrice) : selectedAsset.last_price)).toFixed(2)}
             </span>
           </div>
@@ -207,16 +213,16 @@ export default function OrderForm({ onCreateOrder }) {
       )}
 
       {/* Notificações de Erro ou Sucesso */}
-      {error && <div className="text-xs text-rose-450 bg-rose-950/20 border border-rose-900/50 p-2.5 rounded-lg">{error}</div>}
-      {message && <div className="text-xs text-emerald-400 bg-emerald-950/20 border border-emerald-900/50 p-2.5 rounded-lg">{message}</div>}
+      {error && <div className="text-xs text-rose-450 bg-rose-950/30 border border-rose-900/30 p-3 rounded-xl">{error}</div>}
+      {message && <div className="text-xs text-emerald-400 bg-emerald-950/30 border border-emerald-900/30 p-3 rounded-xl">{message}</div>}
 
       {/* Enviar */}
       <button
         type="submit"
         disabled={loading}
-        className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-750 text-white rounded-lg font-bold text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full py-3.5 btn-neon text-white rounded-xl font-bold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
       >
-        {loading ? 'Processando...' : 'Enviar Ordem'}
+        {loading ? 'Processando...' : 'Enviar Ordem ao Mercado'}
       </button>
     </form>
   )
