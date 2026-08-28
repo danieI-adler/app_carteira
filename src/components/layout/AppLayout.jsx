@@ -45,9 +45,6 @@ export default function AppLayout() {
       {/* Mobile Top Bar */}
       <header className="md:hidden glass-card sticky top-0 z-40 px-6 py-4 flex items-center justify-between border-b border-white/5">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center font-black text-white text-sm">
-            B3
-          </div>
           <span className="font-extrabold text-lg text-white tracking-tight">app_carteira</span>
         </div>
         <button
@@ -77,16 +74,15 @@ export default function AppLayout() {
           
           {/* Logo / Brand + Collapse Button */}
           <div className="flex items-center justify-between px-1 pt-2">
-            <div className="flex items-center gap-3 overflow-hidden">
-              <div className="w-10 h-10 shrink-0 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-600 flex items-center justify-center font-black text-white text-base shadow-lg shadow-indigo-500/20">
-                B3
-              </div>
-              {!collapsed && (
-                <span className="font-black text-xl text-white tracking-tight block truncate">
-                  app_carteira
-                </span>
-              )}
-            </div>
+            {!collapsed ? (
+              <span className="font-black text-xl text-white tracking-tight block truncate">
+                app_carteira
+              </span>
+            ) : (
+              <span className="font-black text-base text-indigo-400 block mx-auto">
+                AC
+              </span>
+            )}
 
             {/* Desktop Collapse Toggle Button */}
             <button
