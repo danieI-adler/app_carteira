@@ -104,11 +104,20 @@ CREATE TABLE IF NOT EXISTS public.system_config (
 ALTER TABLE public.system_config ENABLE ROW LEVEL SECURITY;
 
 -- 3. POLÍTICAS DE SEGURANÇA RLS (Row Level Security)
+-- Função auxiliar que checa se o usuário é admin de forma segura (evita recursão de RLS)
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS BOOLEAN AS $$
+BEGIN
+    RETURN EXISTS (
+        SELECT 1 FROM public.profiles
+        WHERE id = auth.uid() AND role = 'admin'
+    );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 CREATE POLICY "Permitir leitura pública de perfis" ON public.profiles FOR SELECT USING (true);
 CREATE POLICY "Permitir alteração do próprio perfil" ON public.profiles FOR UPDATE USING (auth.uid() = id);
-CREATE POLICY "Permitir modificação total por admins" ON public.profiles FOR ALL USING (
-    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
-);
+CREATE POLICY "Permitir modificação total por admins" ON public.profiles FOR ALL USING (public.is_admin());
 
 CREATE POLICY "Permitir leitura pública de equipes" ON public.teams FOR SELECT USING (true);
 CREATE POLICY "Permitir criação de equipes por admins" ON public.teams FOR INSERT WITH CHECK (

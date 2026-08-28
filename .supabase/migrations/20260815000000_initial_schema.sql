@@ -116,12 +116,26 @@ ALTER TABLE public.system_config ENABLE ROW LEVEL SECURITY;
 
 -- POLÍTICAS DE RLS (POLICIES)
 
+-- Função auxiliar que checa se o usuário é admin de forma segura (evita recursão de RLS)
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS BOOLEAN AS $$
+BEGIN
+    RETURN EXISTS (
+        SELECT 1 FROM public.profiles
+        WHERE id = auth.uid() AND role = 'admin'
+    );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 -- Políticas para profiles
 CREATE POLICY "Permitir que usuários leiam todos os perfis" ON public.profiles
     FOR SELECT USING (true);
 
 CREATE POLICY "Permitir que usuários atualizem seu próprio perfil" ON public.profiles
     FOR UPDATE USING (auth.uid() = id);
+
+CREATE POLICY "Permitir modificação total por admins" ON public.profiles
+    FOR ALL USING (public.is_admin());
 
 -- Políticas para teams
 CREATE POLICY "Permitir leitura pública de equipes" ON public.teams
