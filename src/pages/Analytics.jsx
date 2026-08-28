@@ -1,12 +1,5 @@
 import { useMemo } from 'react'
 import usePortfolio from '../hooks/usePortfolio'
-import SpotlightCard from '../components/ui/SpotlightCard'
-import { 
-  PieChart as PieIcon, 
-  TrendingUp, 
-  ShieldCheck, 
-  Sparkles 
-} from 'lucide-react'
 
 export default function Analytics() {
   const { team, positions, loading, error } = usePortfolio()
@@ -20,9 +13,8 @@ export default function Analytics() {
 
   const balance = team?.balance ?? 10000000.00
   const netWorth = team?.net_worth ?? 10000000.00
-  const monthlySavingsYield = balance * 0.005 // 0.5% ao mês
+  const monthlySavingsYield = balance * 0.005
 
-  // Allocation calculation
   const allocation = useMemo(() => {
     let acoesVal = 0
     let fiisVal = 0
@@ -43,28 +35,28 @@ export default function Analytics() {
 
     return {
       cash: {
-        label: 'Poupança / Caixa Livre (0,5% a.m.)',
+        label: 'Caixa / Poupança Automática (0,5% a.m.)',
         value: balance,
         percent: Math.max(0, (balance / totalPortfolio) * 100),
-        color: '#6366f1',
+        color: '#71717a', // zinc-500
       },
       acoes: {
         label: 'Ações B3',
         value: acoesVal,
         percent: Math.max(0, (acoesVal / totalPortfolio) * 100),
-        color: '#10b981',
+        color: '#10b981', // emerald
       },
       fiis: {
         label: 'Fundos Imobiliários (FIIs)',
         value: fiisVal,
         percent: Math.max(0, (fiisVal / totalPortfolio) * 100),
-        color: '#a855f7',
+        color: '#3b82f6', // blue
       },
       etfs: {
         label: 'ETFs & Índices Globais',
         value: etfsVal,
         percent: Math.max(0, (etfsVal / totalPortfolio) * 100),
-        color: '#f59e0b',
+        color: '#f59e0b', // amber
       },
     }
   }, [positions, balance, netWorth])
@@ -75,7 +67,7 @@ export default function Analytics() {
     const diff = current - initial
 
     return [
-      { label: 'Início', value: initial },
+      { label: 'Base', value: initial },
       { label: 'Sem 1', value: initial + diff * 0.15 },
       { label: 'Sem 2', value: initial + diff * 0.35 },
       { label: 'Sem 3', value: initial + diff * 0.60 },
@@ -86,10 +78,10 @@ export default function Analytics() {
 
   if (loading) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-slate-400 text-sm">Calculando métricas e gráficos...</p>
+      <div className="min-h-[50vh] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-2">
+          <div className="w-5 h-5 border-2 border-zinc-500 border-t-zinc-100 rounded-full animate-spin"></div>
+          <span className="text-xs text-zinc-500 font-medium">Calculando métricas...</span>
         </div>
       </div>
     )
@@ -97,189 +89,148 @@ export default function Analytics() {
 
   if (error) {
     return (
-      <div className="glass-card border border-rose-900/30 p-8 rounded-2xl max-w-md mx-auto text-center space-y-4">
-        <h2 className="text-rose-450 font-bold text-xl">Erro</h2>
-        <p className="text-slate-350 text-sm">{error}</p>
-      </div>
+      <div className="surface-card p-6 max-w-md mx-auto text-center border-red-900/40 text-red-400 text-xs">{error}</div>
     )
   }
 
-  // Calculate SVG Polyline points
   const minVal = Math.min(...evolutionPoints.map(p => p.value)) * 0.99
   const maxVal = Math.max(...evolutionPoints.map(p => p.value)) * 1.01
   const range = maxVal - minVal || 1
   const chartWidth = 700
-  const chartHeight = 220
+  const chartHeight = 200
 
   const svgPoints = evolutionPoints.map((pt, idx) => {
     const x = (idx / (evolutionPoints.length - 1)) * (chartWidth - 40) + 20
-    const y = chartHeight - 30 - ((pt.value - minVal) / range) * (chartHeight - 60)
+    const y = chartHeight - 25 - ((pt.value - minVal) / range) * (chartHeight - 50)
     return `${x},${y}`
   }).join(' ')
 
-  const areaPoints = `20,${chartHeight - 30} ${svgPoints} ${chartWidth - 20},${chartHeight - 30}`
+  const areaPoints = `20,${chartHeight - 25} ${svgPoints} ${chartWidth - 20},${chartHeight - 25}`
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8">
+    <div className="max-w-7xl mx-auto space-y-6">
       
       {/* Header */}
-      <div>
-        <div className="flex items-center gap-2 text-indigo-400 text-xs font-bold uppercase tracking-widest">
-          <PieIcon size={14} />
-          <span>Inteligência de Carteira</span>
-        </div>
-        <h1 className="text-3xl font-black text-white tracking-tight mt-1">Gráficos & Análise</h1>
-        <p className="text-slate-400 text-xs mt-1">
-          Evolução patrimonial, alocação setorial e rentabilidade da poupança automática.
-        </p>
+      <div className="border-b border-zinc-800 pb-4">
+        <div className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider">Análise Quantitativa</div>
+        <h1 className="text-xl font-semibold text-zinc-100 tracking-tight mt-0.5">Alocação e Evolução Patrimonial</h1>
       </div>
 
-      {/* Automatic Savings Highlight Card */}
-      <SpotlightCard className="p-6 border-indigo-500/30 bg-gradient-to-r from-indigo-950/40 via-slate-900/70 to-purple-950/40 relative overflow-hidden">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-          <div className="space-y-2 max-w-2xl">
-            <div className="flex items-center gap-2 text-emerald-400 text-xs font-bold uppercase tracking-wider">
-              <ShieldCheck size={16} />
-              <span>Poupança Automática Ativa</span>
-            </div>
-            <h2 className="text-xl font-black text-white">Rendimento de 0,5% a.m. sobre o Caixa Livre</h2>
-            <p className="text-xs text-slate-300 leading-relaxed">
-              Todo o capital não alocado em ativos rende automaticamente <strong className="text-white">0,5% ao mês</strong> na poupança, mantendo 100% de liquidez livre para compras a qualquer momento.
-            </p>
-          </div>
-          <div className="bg-slate-950/90 border border-white/10 rounded-2xl p-5 min-w-[240px] text-right space-y-1 shadow-lg">
-            <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider block">Rendimento Estimado / Mês</span>
-            <span className="text-2xl font-black text-emerald-400 block">+{formatBRL(monthlySavingsYield)}</span>
-            <span className="text-[11px] text-slate-400 block">Sobre {formatBRL(balance)} disponível</span>
-          </div>
+      {/* Automatic Savings Note */}
+      <div className="surface-card p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <div className="text-xs font-semibold text-zinc-200">Regra de Poupança Automática (0,5% a.m.)</div>
+          <p className="text-xs text-zinc-400 mt-0.5">
+            O saldo não alocado em ativos permanece em poupança com liquidez imediata para compras.
+          </p>
         </div>
-      </SpotlightCard>
+        <div className="text-right sm:border-l sm:border-zinc-800 sm:pl-6 shrink-0">
+          <span className="text-[11px] text-zinc-500 block">Projeção Mensal de Juros</span>
+          <span className="font-mono-nums font-semibold text-emerald-400 text-sm">+{formatBRL(monthlySavingsYield)}</span>
+        </div>
+      </div>
 
       {/* Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
-        {/* Asset Allocation Card */}
-        <SpotlightCard className="p-6 space-y-6">
-          <div className="flex justify-between items-center border-b border-white/5 pb-4">
-            <div>
-              <h2 className="text-lg font-bold text-white tracking-tight">Composição Percentual</h2>
-              <p className="text-xs text-slate-400 mt-0.5">Distribuição da carteira por classes</p>
-            </div>
-            <div className="flex items-center gap-1 text-indigo-400 text-xs font-bold">
-              <Sparkles size={14} />
-              <span>{positions.length} ativos</span>
-            </div>
+        {/* Allocation */}
+        <div className="surface-card p-5 space-y-5">
+          <div className="flex justify-between items-center border-b border-zinc-800 pb-3">
+            <h2 className="text-sm font-semibold text-zinc-100">Alocação por Classe de Ativos</h2>
+            <span className="text-xs font-mono-nums text-zinc-500">{positions.length} ativos</span>
           </div>
 
-          {/* Allocation Visual Bar */}
-          <div className="space-y-2">
-            <div className="w-full h-4 rounded-full bg-slate-950 border border-white/10 overflow-hidden flex shadow-inner">
-              {Object.values(allocation).map((item, idx) => (
-                <div 
-                  key={idx} 
-                  style={{ width: `${item.percent}%`, backgroundColor: item.color }} 
-                  className="h-full transition-all duration-500"
-                  title={`${item.label}: ${item.percent.toFixed(1)}%`}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Asset Breakdown List */}
-          <div className="space-y-3 pt-2">
+          <div className="w-full h-3 rounded bg-zinc-900 border border-zinc-800 overflow-hidden flex">
             {Object.values(allocation).map((item, idx) => (
-              <div key={idx} className="flex items-center justify-between p-3.5 bg-slate-950/50 border border-white/5 rounded-xl hover:border-white/10 transition-all">
-                <div className="flex items-center gap-3">
-                  <div className="w-3.5 h-3.5 rounded-lg shadow-sm" style={{ backgroundColor: item.color }} />
+              <div 
+                key={idx} 
+                style={{ width: `${item.percent}%`, backgroundColor: item.color }} 
+                className="h-full"
+                title={`${item.label}: ${item.percent.toFixed(1)}%`}
+              />
+            ))}
+          </div>
+
+          <div className="space-y-2">
+            {Object.values(allocation).map((item, idx) => (
+              <div key={idx} className="flex items-center justify-between p-2.5 bg-[#0c0c0e] border border-zinc-800/80 rounded">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: item.color }} />
                   <div>
-                    <span className="text-sm font-bold text-white block">{item.label}</span>
-                    <span className="text-xs text-slate-400">{formatBRL(item.value)}</span>
+                    <span className="text-xs font-medium text-zinc-200 block">{item.label}</span>
+                    <span className="text-[11px] font-mono-nums text-zinc-500">{formatBRL(item.value)}</span>
                   </div>
                 </div>
-                <div className="text-right">
-                  <span className="text-sm font-black text-white">{item.percent.toFixed(1)}%</span>
-                </div>
+                <span className="font-mono-nums text-xs font-semibold text-zinc-100">{item.percent.toFixed(1)}%</span>
               </div>
             ))}
           </div>
-        </SpotlightCard>
+        </div>
 
-        {/* Wealth Evolution Card */}
-        <SpotlightCard className="p-6 space-y-6">
-          <div className="flex justify-between items-center border-b border-white/5 pb-4">
-            <div>
-              <h2 className="text-lg font-bold text-white tracking-tight">Evolução do Patrimônio</h2>
-              <p className="text-xs text-slate-400 mt-0.5">Trajetória de valorização</p>
-            </div>
-            <div className="flex items-center gap-1 text-emerald-400 text-xs font-bold bg-emerald-950/40 px-2.5 py-1 rounded-lg border border-emerald-800/40">
-              <TrendingUp size={14} />
-              <span>{(((netWorth - 10000000) / 10000000) * 100).toFixed(2)}% Total</span>
-            </div>
+        {/* Wealth Evolution */}
+        <div className="surface-card p-5 space-y-5">
+          <div className="flex justify-between items-center border-b border-zinc-800 pb-3">
+            <h2 className="text-sm font-semibold text-zinc-100">Trajetória do Patrimônio</h2>
+            <span className="font-mono-nums text-xs font-semibold text-emerald-400">
+              {(((netWorth - 10000000) / 10000000) * 100).toFixed(2)}% Total
+            </span>
           </div>
 
-          {/* Custom SVG Line & Area Chart */}
-          <div className="w-full bg-slate-950/50 border border-white/5 rounded-2xl p-4 flex flex-col justify-between">
+          <div className="w-full bg-[#0c0c0e] border border-zinc-800 rounded p-3">
             <svg 
               viewBox={`0 0 ${chartWidth} ${chartHeight}`} 
-              className="w-full h-48 overflow-visible"
+              className="w-full h-44 overflow-visible"
             >
-              <defs>
-                <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#6366f1" stopOpacity="0.45" />
-                  <stop offset="100%" stopColor="#6366f1" stopOpacity="0.0" />
-                </linearGradient>
-              </defs>
-              
-              <line x1="20" y1="40" x2={chartWidth - 20} y2="40" stroke="rgba(255,255,255,0.05)" strokeDasharray="4" />
-              <line x1="20" y1="100" x2={chartWidth - 20} y2="100" stroke="rgba(255,255,255,0.05)" strokeDasharray="4" />
-              <line x1="20" y1={chartHeight - 30} x2={chartWidth - 20} y2={chartHeight - 30} stroke="rgba(255,255,255,0.1)" />
+              <line x1="20" y1="35" x2={chartWidth - 20} y2="35" stroke="#27272a" strokeDasharray="3" />
+              <line x1="20" y1="90" x2={chartWidth - 20} y2="90" stroke="#27272a" strokeDasharray="3" />
+              <line x1="20" y1={chartHeight - 25} x2={chartWidth - 20} y2={chartHeight - 25} stroke="#3f3f46" />
 
-              <polygon points={areaPoints} fill="url(#chartGradient)" />
+              <polygon points={areaPoints} fill="rgba(255, 255, 255, 0.03)" />
 
               <polyline 
                 points={svgPoints} 
                 fill="none" 
-                stroke="#818cf8" 
-                strokeWidth="3" 
+                stroke="#e4e4e7" 
+                strokeWidth="1.75" 
                 strokeLinecap="round" 
                 strokeLinejoin="round" 
               />
 
               {evolutionPoints.map((pt, idx) => {
                 const x = (idx / (evolutionPoints.length - 1)) * (chartWidth - 40) + 20
-                const y = chartHeight - 30 - ((pt.value - minVal) / range) * (chartHeight - 60)
+                const y = chartHeight - 25 - ((pt.value - minVal) / range) * (chartHeight - 50)
                 return (
                   <circle 
                     key={idx} 
                     cx={x} 
                     cy={y} 
-                    r="5" 
-                    fill="#030712" 
-                    stroke="#818cf8" 
-                    strokeWidth="3" 
+                    r="3.5" 
+                    fill="#09090b" 
+                    stroke="#e4e4e7" 
+                    strokeWidth="1.5" 
                   />
                 )
               })}
             </svg>
 
-            <div className="flex justify-between items-center px-4 pt-2 text-[10px] text-slate-500 font-bold uppercase tracking-wider">
+            <div className="flex justify-between items-center px-2 pt-2 text-[10px] text-zinc-500 font-mono-nums uppercase">
               {evolutionPoints.map((pt, idx) => (
                 <span key={idx}>{pt.label}</span>
               ))}
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="p-4 bg-slate-950/50 border border-white/5 rounded-xl space-y-1">
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Capital Inicial</span>
-              <span className="text-base font-bold text-slate-200 block">R$ 10.000.000,00</span>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="p-3 bg-[#0c0c0e] border border-zinc-800 rounded">
+              <span className="text-[10px] text-zinc-500 font-medium uppercase block">Capital Base</span>
+              <span className="font-mono-nums text-xs font-semibold text-zinc-200 block mt-0.5">R$ 10.000.000,00</span>
             </div>
-            <div className="p-4 bg-slate-950/50 border border-white/5 rounded-xl space-y-1">
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Patrimônio Líquido</span>
-              <span className="text-base font-black text-neon-gradient block">{formatBRL(netWorth)}</span>
+            <div className="p-3 bg-[#0c0c0e] border border-zinc-800 rounded">
+              <span className="text-[10px] text-zinc-500 font-medium uppercase block">Patrimônio Líquido</span>
+              <span className="font-mono-nums text-xs font-semibold text-zinc-100 block mt-0.5">{formatBRL(netWorth)}</span>
             </div>
           </div>
-        </SpotlightCard>
+        </div>
 
       </div>
     </div>

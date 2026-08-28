@@ -1,6 +1,5 @@
 import usePortfolio from '../hooks/usePortfolio'
-import SpotlightCard from '../components/ui/SpotlightCard'
-import { Wallet, Layers, History, ShieldCheck, TrendingUp, Sparkles, ArrowUpRight } from 'lucide-react'
+import { ArrowUpRight, ArrowDownRight } from 'lucide-react'
 
 export default function Dashboard() {
   const { team, positions, transactions, loading, error } = usePortfolio()
@@ -14,10 +13,10 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-slate-400 text-sm">Carregando dados da carteira...</p>
+      <div className="min-h-[50vh] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-2">
+          <div className="w-5 h-5 border-2 border-zinc-500 border-t-zinc-100 rounded-full animate-spin"></div>
+          <span className="text-xs text-zinc-500 font-medium">Carregando portfólio...</span>
         </div>
       </div>
     )
@@ -25,9 +24,9 @@ export default function Dashboard() {
 
   if (error) {
     return (
-      <div className="glass-card border border-rose-900/30 p-8 rounded-2xl max-w-md mx-auto text-center space-y-4">
-        <h2 className="text-rose-450 font-bold text-xl">Erro</h2>
-        <p className="text-slate-350 text-sm">{error}</p>
+      <div className="surface-card p-6 max-w-md mx-auto text-center space-y-2 border-red-900/40">
+        <h2 className="text-sm font-semibold text-red-400">Falha ao carregar dados</h2>
+        <p className="text-xs text-zinc-400">{error}</p>
       </div>
     )
   }
@@ -40,195 +39,169 @@ export default function Dashboard() {
   const monthlySavingsYield = balance * 0.005
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8">
+    <div className="max-w-7xl mx-auto space-y-6">
       
-      {/* Page Title */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-zinc-800 pb-4">
         <div>
-          <div className="flex items-center gap-2 text-indigo-400 text-xs font-bold uppercase tracking-widest">
-            <Sparkles size={14} />
-            <span>Visão Geral</span>
-          </div>
-          <h1 className="text-3xl font-black text-white tracking-tight mt-1">{teamName}</h1>
+          <div className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider">Portfólio Institucional</div>
+          <h1 className="text-xl font-semibold text-zinc-100 tracking-tight mt-0.5">{teamName}</h1>
+        </div>
+        <div className="text-right sm:border-l sm:border-zinc-800 sm:pl-6">
+          <span className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider block">Patrimônio Líquido</span>
+          <span className="font-mono-nums text-xl font-semibold text-zinc-100">{formatBRL(netWorth)}</span>
         </div>
       </div>
 
-      {/* BENTO GRID: Financial Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* Metrics Row */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         
-        {/* Card 1: Patrimônio Líquido Principal */}
-        <SpotlightCard className="p-6 md:col-span-2 flex flex-col justify-between space-y-4">
-          <div className="flex justify-between items-start">
-            <div className="space-y-1">
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">Patrimônio Líquido Total</span>
-              <div className="text-4xl font-black text-neon-gradient">{formatBRL(netWorth)}</div>
-            </div>
-            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-black ${totalProfit >= 0 ? 'bg-emerald-950/50 text-emerald-400 border-emerald-800/40' : 'bg-rose-950/50 text-rose-450 border-rose-800/40'}`}>
-              <TrendingUp size={14} />
-              <span>{totalProfit >= 0 ? '+' : ''}{profitPercent.toFixed(2)}%</span>
-            </div>
-          </div>
-          
-          <div className="pt-4 border-t border-white/5 flex flex-wrap items-center justify-between gap-4 text-xs">
-            <div className="flex items-center gap-2">
-              <span className="text-slate-400">Lucro/Prejuízo:</span>
-              <span className={`font-bold ${totalProfit >= 0 ? 'text-emerald-400' : 'text-rose-450'}`}>
-                {totalProfit >= 0 ? '+' : ''}{formatBRL(totalProfit)}
-              </span>
-            </div>
-            <div className="text-slate-500">Capital Base: R$ 10.000.000,00</div>
-          </div>
-        </SpotlightCard>
+        {/* Metric 1 */}
+        <div className="surface-card p-4 space-y-1">
+          <span className="text-[11px] text-zinc-500 font-medium uppercase tracking-wider">Caixa Disponível</span>
+          <div className="font-mono-nums text-lg font-semibold text-zinc-100">{formatBRL(balance)}</div>
+          <div className="text-[11px] text-zinc-400">Poupança Automática (0,5% a.m.)</div>
+        </div>
 
-        {/* Card 2: Poupança Automática (0,5% a.m.) */}
-        <SpotlightCard className="p-6 flex flex-col justify-between space-y-4 bg-gradient-to-br from-slate-900/60 via-slate-900/40 to-indigo-950/30">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-emerald-400 text-xs font-bold uppercase tracking-wider">
-              <ShieldCheck size={16} />
-              <span>Poupança Automática</span>
-            </div>
-            <span className="text-xs text-slate-400 block">Caixa Livre (Rendimento 0,5% a.m.)</span>
-            <div className="text-2xl font-black text-white">{formatBRL(balance)}</div>
+        {/* Metric 2 */}
+        <div className="surface-card p-4 space-y-1">
+          <span className="text-[11px] text-zinc-500 font-medium uppercase tracking-wider">Rendimento Poupança</span>
+          <div className="font-mono-nums text-lg font-semibold text-emerald-400">+{formatBRL(monthlySavingsYield)}</div>
+          <div className="text-[11px] text-zinc-400">Projeção mensal sobre caixa livre</div>
+        </div>
+
+        {/* Metric 3 */}
+        <div className="surface-card p-4 space-y-1">
+          <span className="text-[11px] text-zinc-500 font-medium uppercase tracking-wider">Retorno Acumulado</span>
+          <div className={`font-mono-nums text-lg font-semibold flex items-center gap-1 ${totalProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+            {totalProfit >= 0 ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
+            <span>{totalProfit >= 0 ? '+' : ''}{formatBRL(totalProfit)}</span>
           </div>
-          <div className="pt-3 border-t border-white/5 flex justify-between items-center text-xs">
-            <span className="text-slate-400">Rendimento estimado:</span>
-            <span className="font-bold text-emerald-400">+{formatBRL(monthlySavingsYield)}/mês</span>
+          <div className={`text-[11px] font-medium ${totalProfit >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+            {totalProfit >= 0 ? '+' : ''}{profitPercent.toFixed(2)}% sobre R$ 10M base
           </div>
-        </SpotlightCard>
+        </div>
+
+        {/* Metric 4 */}
+        <div className="surface-card p-4 space-y-1">
+          <span className="text-[11px] text-zinc-500 font-medium uppercase tracking-wider">Posições em Carteira</span>
+          <div className="font-mono-nums text-lg font-semibold text-zinc-100">{positions.length} ativos</div>
+          <div className="text-[11px] text-zinc-400">
+            {((((netWorth - balance) / (netWorth || 1)) * 100)).toFixed(1)}% do capital alocado
+          </div>
+        </div>
 
       </div>
 
-      {/* BENTO GRID: Positions & Transactions */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        {/* Custody Positions Table */}
-        <SpotlightCard className="p-6 lg:col-span-2 space-y-5">
-          <div className="flex items-center justify-between border-b border-white/5 pb-3">
-            <div className="flex items-center gap-2">
-              <Layers size={18} className="text-indigo-400" />
-              <h2 className="text-lg font-bold text-white tracking-tight">Posições em Custódia</h2>
-            </div>
-            <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-950 border border-white/10 text-slate-300">
-              {positions.length} ativos
-            </span>
+      {/* Custody Positions */}
+      <div className="surface-card">
+        <div className="px-5 py-3.5 border-b border-zinc-800 flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-zinc-100">Posições em Custódia</h2>
+          <span className="text-xs text-zinc-500 font-mono-nums">{positions.length} posições</span>
+        </div>
+
+        {positions.length === 0 ? (
+          <div className="text-center py-12 text-zinc-500 text-xs">
+            Nenhuma posição em custódia. Acesse o Mercado para executar ordens.
           </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr className="border-b border-zinc-800 text-zinc-400 bg-[#0c0c0e]">
+                  <th className="py-2.5 px-4 font-medium">Ativo</th>
+                  <th className="py-2.5 px-4 font-medium">Tipo</th>
+                  <th className="py-2.5 px-4 text-right font-medium">Quantidade</th>
+                  <th className="py-2.5 px-4 text-right font-medium">Preço Médio</th>
+                  <th className="py-2.5 px-4 text-right font-medium">Cotação Atual</th>
+                  <th className="py-2.5 px-4 text-right font-medium">Valor Total</th>
+                  <th className="py-2.5 px-4 text-right font-medium">Resultado</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-850">
+                {positions.map((pos, idx) => {
+                  const price = pos.assets?.last_price || pos.average_price
+                  const totalVal = pos.quantity * price
+                  const posProfit = (price - pos.average_price) * pos.quantity
+                  const profitPct = pos.average_price > 0 ? ((price - pos.average_price) / pos.average_price) * 100 : 0
 
-          {positions.length === 0 ? (
-            <div className="text-center py-16 text-slate-500 border border-dashed border-white/5 rounded-2xl">
-              Nenhuma posição aberta no momento. Acesse a aba Mercado para negociar.
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse text-sm">
-                <thead>
-                  <tr className="border-b border-white/5 text-slate-450 text-xs font-bold uppercase tracking-wider">
-                    <th className="py-3 px-4 sm:px-6">Ativo</th>
-                    <th className="py-3 px-4 sm:px-6 text-right">Qtd</th>
-                    <th className="py-3 px-4 sm:px-6 text-right">Preço Médio</th>
-                    <th className="py-3 px-4 sm:px-6 text-right">Preço Atual</th>
-                    <th className="py-3 px-4 sm:px-6 text-right">Valor de Mercado</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5">
-                  {positions.map((pos, idx) => {
-                    const price = pos.assets?.last_price || pos.average_price
-                    const totalVal = pos.quantity * price
-                    const posProfit = (price - pos.average_price) * pos.quantity
-                    return (
-                      <tr key={idx} className="hover:bg-white/[0.02] transition-colors">
-                        <td className="py-4 px-4 sm:px-6">
-                          <div className="flex items-center gap-2">
-                            <span className="font-black text-indigo-300 bg-indigo-950/50 px-3 py-1 rounded-xl border border-indigo-500/30 text-xs shadow-sm">
-                              {pos.asset_symbol}
-                            </span>
-                            <span className="text-[10px] uppercase font-bold text-slate-500 hidden sm:inline">
-                              {pos.assets?.type || 'Ação'}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="py-4 px-4 sm:px-6 text-right text-slate-200 font-medium">{pos.quantity}</td>
-                        <td className="py-4 px-4 sm:px-6 text-right text-slate-400">{formatBRL(pos.average_price)}</td>
-                        <td className="py-4 px-4 sm:px-6 text-right text-slate-300 font-medium">{formatBRL(price)}</td>
-                        <td className="py-4 px-4 sm:px-6 text-right">
-                          <span className="font-bold text-emerald-400 block">{formatBRL(totalVal)}</span>
-                          <span className={`text-[10px] font-semibold ${posProfit >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
-                            {posProfit >= 0 ? '+' : ''}{formatBRL(posProfit)}
-                          </span>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </SpotlightCard>
-
-        {/* Quick Allocation Summary */}
-        <SpotlightCard className="p-6 space-y-5 lg:col-span-1 h-fit">
-          <div className="flex items-center gap-2 border-b border-white/5 pb-3">
-            <Wallet size={18} className="text-indigo-400" />
-            <h2 className="text-lg font-bold text-white tracking-tight">Composição Rápida</h2>
+                  return (
+                    <tr key={idx} className="table-row-hover font-mono-nums">
+                      <td className="py-3 px-4">
+                        <span className="font-semibold text-zinc-100">{pos.asset_symbol}</span>
+                      </td>
+                      <td className="py-3 px-4 uppercase text-[11px] text-zinc-400 font-sans">
+                        {pos.assets?.type || 'Ação'}
+                      </td>
+                      <td className="py-3 px-4 text-right text-zinc-300">{pos.quantity.toLocaleString('pt-BR')}</td>
+                      <td className="py-3 px-4 text-right text-zinc-400">{formatBRL(pos.average_price)}</td>
+                      <td className="py-3 px-4 text-right text-zinc-200">{formatBRL(price)}</td>
+                      <td className="py-3 px-4 text-right font-semibold text-zinc-100">{formatBRL(totalVal)}</td>
+                      <td className="py-3 px-4 text-right">
+                        <span className={`font-semibold ${posProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                          {posProfit >= 0 ? '+' : ''}{formatBRL(posProfit)}
+                        </span>
+                        <span className={`block text-[10px] ${posProfit >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                          {posProfit >= 0 ? '+' : ''}{profitPct.toFixed(2)}%
+                        </span>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
           </div>
-          
-          <div className="space-y-3 text-xs">
-            <div className="flex justify-between items-center p-3 bg-slate-950/50 rounded-xl border border-white/5">
-              <span className="text-slate-400">Caixa Líquido</span>
-              <span className="font-bold text-white">{((balance / (netWorth || 1)) * 100).toFixed(1)}%</span>
-            </div>
-            <div className="flex justify-between items-center p-3 bg-slate-950/50 rounded-xl border border-white/5">
-              <span className="text-slate-400">Ativos Aplicados</span>
-              <span className="font-bold text-emerald-400">{(((netWorth - balance) / (netWorth || 1)) * 100).toFixed(1)}%</span>
-            </div>
-          </div>
-        </SpotlightCard>
-
-        {/* Transactions Timeline */}
-        <SpotlightCard className="p-6 lg:col-span-3 space-y-5">
-          <div className="flex items-center justify-between border-b border-white/5 pb-3">
-            <div className="flex items-center gap-2">
-              <History size={18} className="text-indigo-400" />
-              <h2 className="text-lg font-bold text-white tracking-tight">Histórico de Transações</h2>
-            </div>
-            <span className="text-xs text-slate-500">Últimas operações</span>
-          </div>
-
-          {transactions.length === 0 ? (
-            <div className="text-center py-10 text-slate-550">
-              Nenhuma movimentação registrada por esta equipe.
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {transactions.slice(0, 8).map((tx, idx) => {
-                const isBuy = tx.transaction_type === 'buy'
-                return (
-                  <div key={idx} className="flex justify-between items-center p-4 bg-slate-950/40 border border-white/5 rounded-2xl hover:border-white/10 transition-all">
-                    <div className="flex items-center gap-3">
-                      <span className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase ${isBuy ? 'bg-emerald-950/50 text-emerald-300 border border-emerald-800/40' : 'bg-rose-950/50 text-rose-300 border border-rose-800/40'}`}>
-                        {isBuy ? <ArrowUpRight size={12} /> : null}
-                        <span>{isBuy ? 'Compra' : 'Venda'}</span>
-                      </span>
-                      <div>
-                        <span className="font-black text-white block text-sm">{tx.asset_symbol}</span>
-                        <span className="text-[10px] text-slate-500">Taxa B3: {formatBRL(tx.fee)}</span>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <span className="font-bold text-slate-200 block text-sm">
-                        {tx.quantity} un @ {formatBRL(tx.price)}
-                      </span>
-                      <span className="text-[11px] font-bold text-indigo-400">
-                        {formatBRL(tx.quantity * tx.price)}
-                      </span>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </SpotlightCard>
-
+        )}
       </div>
+
+      {/* Transaction History */}
+      <div className="surface-card">
+        <div className="px-5 py-3.5 border-b border-zinc-800 flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-zinc-100">Histórico de Ordens Executadas</h2>
+          <span className="text-xs text-zinc-500 font-mono-nums">{transactions.length} registros</span>
+        </div>
+
+        {transactions.length === 0 ? (
+          <div className="text-center py-8 text-zinc-500 text-xs">
+            Nenhuma movimentação realizada.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr className="border-b border-zinc-800 text-zinc-400 bg-[#0c0c0e]">
+                  <th className="py-2.5 px-4 font-medium">Operação</th>
+                  <th className="py-2.5 px-4 font-medium">Ativo</th>
+                  <th className="py-2.5 px-4 text-right font-medium">Quantidade</th>
+                  <th className="py-2.5 px-4 text-right font-medium">Preço Executado</th>
+                  <th className="py-2.5 px-4 text-right font-medium">Volume Total</th>
+                  <th className="py-2.5 px-4 text-right font-medium">Corretagem/Taxa</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-850">
+                {transactions.slice(0, 10).map((tx, idx) => {
+                  const isBuy = tx.transaction_type === 'buy'
+                  return (
+                    <tr key={idx} className="table-row-hover font-mono-nums">
+                      <td className="py-2.5 px-4 font-sans">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase ${isBuy ? 'bg-emerald-950/50 text-emerald-400 border border-emerald-900/60' : 'bg-red-950/50 text-red-400 border border-red-900/60'}`}>
+                          {isBuy ? 'Compra' : 'Venda'}
+                        </span>
+                      </td>
+                      <td className="py-2.5 px-4 font-semibold text-zinc-200">{tx.asset_symbol}</td>
+                      <td className="py-2.5 px-4 text-right text-zinc-300">{tx.quantity.toLocaleString('pt-BR')}</td>
+                      <td className="py-2.5 px-4 text-right text-zinc-300">{formatBRL(tx.price)}</td>
+                      <td className="py-2.5 px-4 text-right font-semibold text-zinc-100">{formatBRL(tx.quantity * tx.price)}</td>
+                      <td className="py-2.5 px-4 text-right text-zinc-400">{formatBRL(tx.fee)}</td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
     </div>
   )
 }

@@ -14,7 +14,6 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import usePortfolio from '../../hooks/usePortfolio'
-import BackgroundPattern from '../ui/BackgroundPattern'
 
 export default function AppLayout() {
   const { signOut, profile } = useAuth()
@@ -41,82 +40,90 @@ export default function AppLayout() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-[#030712] text-slate-100 relative">
-      <BackgroundPattern />
+    <div className="min-h-screen flex flex-col md:flex-row bg-[#09090b] text-zinc-100">
       
       {/* Mobile Top Bar */}
-      <header className="md:hidden glass-card sticky top-0 z-40 px-6 py-4 flex items-center justify-between border-b border-white/5">
-        <div className="flex items-center gap-2">
-          <span className="font-extrabold text-lg text-white tracking-tight">app_carteira</span>
+      <header className="md:hidden bg-[#111114] border-b border-zinc-800 px-5 py-3.5 flex items-center justify-between sticky top-0 z-40">
+        <div className="flex items-center gap-2.5">
+          <div className="w-6 h-6 rounded bg-zinc-800 border border-zinc-700 flex items-center justify-center font-bold text-xs text-zinc-200">
+            C
+          </div>
+          <span className="font-semibold text-sm tracking-tight text-zinc-100">app_carteira</span>
         </div>
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
-          className="p-2 rounded-xl bg-slate-900/60 border border-white/10 text-slate-300 hover:text-white cursor-pointer"
+          className="p-1.5 rounded-md bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200 cursor-pointer"
         >
-          {mobileOpen ? <X size={20} /> : <Menu size={20} />}
+          {mobileOpen ? <X size={18} /> : <Menu size={18} />}
         </button>
       </header>
 
-      {/* Sidebar Overlay for Mobile */}
+      {/* Mobile Backdrop */}
       {mobileOpen && (
         <div 
           onClick={() => setMobileOpen(false)}
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden"
+          className="fixed inset-0 bg-black/70 z-40 md:hidden"
         />
       )}
 
       {/* Sidebar Navigation */}
       <aside className={`
         fixed md:sticky top-0 left-0 z-50 h-screen flex flex-col justify-between
-        glass-card border-r border-white/5 p-4 transition-all duration-300 ease-in-out
-        ${collapsed ? 'md:w-20' : 'md:w-72'}
-        ${mobileOpen ? 'w-72 translate-x-0' : '-translate-x-full md:translate-x-0'}
+        bg-[#111114] border-r border-zinc-800/80 p-3.5 transition-all duration-200 ease-in-out
+        ${collapsed ? 'md:w-16' : 'md:w-64'}
+        ${mobileOpen ? 'w-64 translate-x-0' : '-translate-x-full md:translate-x-0'}
       `}>
         <div className="space-y-6">
           
-          {/* Logo / Brand + Collapse Button */}
-          <div className="flex items-center justify-between px-1 pt-2">
+          {/* Brand Header */}
+          <div className="flex items-center justify-between px-2 pt-1">
             {!collapsed ? (
-              <span className="font-black text-xl text-white tracking-tight block truncate">
-                app_carteira
-              </span>
+              <div className="flex items-center gap-2.5">
+                <div className="w-6 h-6 rounded bg-zinc-800 border border-zinc-700 flex items-center justify-center font-semibold text-xs text-zinc-200">
+                  C
+                </div>
+                <span className="font-semibold text-sm tracking-tight text-zinc-100 truncate">
+                  app_carteira
+                </span>
+              </div>
             ) : (
-              <span className="font-black text-base text-indigo-400 block mx-auto">
-                AC
-              </span>
+              <div className="w-6 h-6 rounded bg-zinc-800 border border-zinc-700 flex items-center justify-center font-semibold text-xs text-zinc-200 mx-auto">
+                C
+              </div>
             )}
 
-            {/* Desktop Collapse Toggle Button */}
             <button
               onClick={() => setCollapsed(!collapsed)}
-              title={collapsed ? "Expandir menu lateral" : "Recolher menu lateral"}
-              className="hidden md:flex p-1.5 rounded-xl bg-slate-950/60 hover:bg-slate-800 border border-white/10 text-slate-400 hover:text-white transition-all cursor-pointer"
+              title={collapsed ? "Expandir" : "Recolher"}
+              className="hidden md:flex p-1 rounded-md text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/60 transition-colors cursor-pointer"
             >
-              {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+              {collapsed ? <ChevronRight size={15} /> : <ChevronLeft size={15} />}
             </button>
           </div>
 
-          {/* User / Team Quick Widget (Only shown when expanded) */}
+          {/* Account Overview Widget (when expanded) */}
           {!collapsed && (
-            <div className="bg-slate-950/60 border border-white/5 rounded-2xl p-4 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-slate-400 font-medium">Equipe</span>
-                <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-indigo-950/80 text-indigo-400 border border-indigo-900/40">
-                  {profile?.role === 'admin' ? 'Admin' : 'Competidor'}
+            <div className="bg-[#18181b] border border-zinc-800 rounded-md p-3 space-y-1.5">
+              <div className="flex items-center justify-between text-[11px]">
+                <span className="text-zinc-500 font-medium">Equipe</span>
+                <span className="text-zinc-400 font-medium">
+                  {profile?.role === 'admin' ? 'Administrador' : 'Participante'}
                 </span>
               </div>
-              <div className="font-extrabold text-white text-base truncate">
-                {team?.name || profile?.name || 'Minha Equipe'}
+              <div className="font-semibold text-sm text-zinc-100 truncate">
+                {team?.name || profile?.name || 'Equipe'}
               </div>
-              <div className="pt-2 border-t border-white/5 flex items-center justify-between text-xs">
-                <span className="text-slate-400">Patrimônio</span>
-                <span className="font-bold text-emerald-400">{formatBRL(team?.net_worth || 10000000)}</span>
+              <div className="pt-2 border-t border-zinc-800/80 flex items-center justify-between text-xs">
+                <span className="text-zinc-500 text-[11px]">Patrimônio</span>
+                <span className="font-mono-nums font-semibold text-emerald-400">
+                  {formatBRL(team?.net_worth || 10000000)}
+                </span>
               </div>
             </div>
           )}
 
           {/* Navigation Links */}
-          <nav className="space-y-1.5 pt-2">
+          <nav className="space-y-1">
             {navItems.map((item) => {
               const Icon = item.icon
               return (
@@ -127,14 +134,14 @@ export default function AppLayout() {
                   onClick={() => setMobileOpen(false)}
                   title={collapsed ? item.label : undefined}
                   className={({ isActive }) => `
-                    flex items-center ${collapsed ? 'justify-center px-0' : 'gap-3.5 px-4'} py-3 rounded-xl font-bold text-sm transition-all
+                    flex items-center ${collapsed ? 'justify-center px-0 py-2.5' : 'gap-2.5 px-3 py-2'} rounded-md text-xs font-medium transition-colors
                     ${isActive 
-                      ? 'bg-gradient-to-r from-indigo-600/90 to-indigo-500/80 text-white shadow-lg shadow-indigo-600/20 border border-indigo-400/30' 
-                      : 'text-slate-400 hover:text-slate-100 hover:bg-white/[0.03]'
+                      ? 'bg-zinc-800 text-zinc-100 shadow-sm border border-zinc-700/60' 
+                      : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-850/50'
                     }
                   `}
                 >
-                  <Icon size={18} className="shrink-0" />
+                  <Icon size={16} strokeWidth={1.5} className="shrink-0" />
                   {!collapsed && <span className="truncate">{item.label}</span>}
                 </NavLink>
               )
@@ -142,33 +149,30 @@ export default function AppLayout() {
           </nav>
         </div>
 
-        {/* Sidebar Footer */}
-        <div className="pt-4 border-t border-white/5 space-y-3">
+        {/* Footer */}
+        <div className="pt-3 border-t border-zinc-800 space-y-2">
           {!collapsed && (
-            <div className="px-2 flex items-center gap-3">
-              <div className="w-8 h-8 shrink-0 rounded-full bg-slate-800 border border-white/10 flex items-center justify-center font-bold text-xs text-slate-300">
-                {profile?.name ? profile.name.charAt(0).toUpperCase() : 'U'}
-              </div>
-              <div className="truncate flex-1">
-                <div className="text-xs font-bold text-white truncate">{profile?.name || 'Participante'}</div>
-                <div className="text-[10px] text-slate-500 truncate">{profile?.role === 'admin' ? 'Administrador' : 'Usuário'}</div>
+            <div className="px-2 flex items-center justify-between text-xs">
+              <div className="truncate">
+                <div className="font-medium text-zinc-300 text-xs truncate">{profile?.name || 'Usuário'}</div>
+                <div className="text-[11px] text-zinc-500 truncate">{profile?.role === 'admin' ? 'Admin' : 'Operador'}</div>
               </div>
             </div>
           )}
           
           <button
             onClick={signOut}
-            title={collapsed ? "Sair da Plataforma" : undefined}
-            className={`w-full flex items-center ${collapsed ? 'justify-center p-2.5' : 'justify-center gap-2 px-4 py-2.5'} rounded-xl bg-rose-950/20 hover:bg-rose-900/30 border border-rose-900/30 text-rose-400 font-bold text-xs transition-all cursor-pointer`}
+            title={collapsed ? "Encerrar Sessão" : undefined}
+            className={`w-full flex items-center ${collapsed ? 'justify-center p-2' : 'justify-center gap-2 px-3 py-1.5'} rounded-md bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 hover:text-zinc-200 text-xs font-medium transition-colors cursor-pointer`}
           >
-            <LogOut size={15} className="shrink-0" />
-            {!collapsed && <span>Sair</span>}
+            <LogOut size={14} strokeWidth={1.5} className="shrink-0" />
+            {!collapsed && <span>Encerrar Sessão</span>}
           </button>
         </div>
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 min-w-0 p-4 sm:p-8 md:p-10">
+      <div className="flex-1 min-w-0 p-5 sm:p-8 lg:p-10">
         <Outlet />
       </div>
 

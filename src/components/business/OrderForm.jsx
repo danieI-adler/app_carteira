@@ -2,8 +2,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../services/supabase'
 import usePortfolio from '../../hooks/usePortfolio'
-import SpotlightCard from '../ui/SpotlightCard'
-import { ArrowUpRight, ArrowDownLeft, Zap } from 'lucide-react'
 
 export default function OrderForm({ onCreateOrder, defaultSymbol }) {
   const { team, positions } = usePortfolio()
@@ -67,13 +65,13 @@ export default function OrderForm({ onCreateOrder, defaultSymbol }) {
 
     const qty = parseFloat(quantity)
     if (isNaN(qty) || qty <= 0) {
-      setError('A quantidade deve ser maior que zero.')
+      setError('Informe uma quantidade válida superior a zero.')
       return
     }
 
     const price = orderType === 'limit' ? parseFloat(limitPrice) : null
     if (orderType === 'limit' && (isNaN(price) || price <= 0)) {
-      setError('O preço limite deve ser maior que zero.')
+      setError('Informe um preço limite válido.')
       return
     }
 
@@ -86,7 +84,7 @@ export default function OrderForm({ onCreateOrder, defaultSymbol }) {
         side,
         limitPrice: price,
       })
-      setMessage('Ordem enviada com sucesso!')
+      setMessage('Ordem executada com sucesso.')
       setQuantity('')
       setLimitPrice('')
     } catch (err) {
@@ -101,71 +99,66 @@ export default function OrderForm({ onCreateOrder, defaultSymbol }) {
   ) : 0
 
   return (
-    <SpotlightCard className="p-6 space-y-5">
-      <div className="flex items-center justify-between border-b border-white/5 pb-3">
-        <div className="flex items-center gap-2">
-          <Zap size={16} className="text-indigo-400" />
-          <h2 className="text-lg font-bold text-white tracking-tight">Painel de Ordens</h2>
-        </div>
+    <div className="surface-card p-5 space-y-4">
+      <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+        <h2 className="text-sm font-semibold text-zinc-100">Boleta de Negociação</h2>
         {selectedAsset && (
-          <span className="text-xs font-bold text-indigo-300 bg-indigo-950/60 px-2.5 py-1 rounded-lg border border-indigo-800/40">
+          <span className="font-mono-nums text-xs font-semibold text-zinc-300">
             R$ {selectedAsset.last_price.toFixed(2)}
           </span>
         )}
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-3.5">
         {/* Ativo */}
-        <div>
-          <label className="block text-xs font-medium text-slate-400 mb-1.5 pl-1">Ativo para Negociação</label>
+        <div className="space-y-1">
+          <label className="block text-xs font-medium text-zinc-400">Ativo</label>
           <select
             value={selectedSymbol}
             onChange={(e) => setSelectedSymbol(e.target.value)}
-            className="w-full bg-slate-950/60 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 transition-all"
+            className="w-full input-institutional px-3 py-2 text-xs font-semibold text-zinc-100"
           >
             {assets.map((a) => (
-              <option key={a.symbol} value={a.symbol} className="bg-slate-900 text-slate-200">
+              <option key={a.symbol} value={a.symbol} className="bg-[#111114] text-zinc-200">
                 {a.symbol} — R$ {a.last_price.toFixed(2)} ({a.name})
               </option>
             ))}
           </select>
         </div>
 
-        {/* Operação (Tabs Modernas) */}
-        <div>
-          <label className="block text-xs font-medium text-slate-400 mb-1.5 pl-1">Operação</label>
-          <div className="grid grid-cols-2 gap-1.5 bg-slate-950/80 p-1 rounded-xl border border-white/5">
+        {/* Side Tabs (Compra / Venda / Short / Cover) */}
+        <div className="space-y-1">
+          <label className="block text-xs font-medium text-zinc-400">Operação</label>
+          <div className="grid grid-cols-2 gap-1 p-1 bg-[#0c0c0e] border border-zinc-800 rounded-md">
             <button
               type="button"
               onClick={() => setSide('buy')}
-              className={`flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              className={`py-1.5 text-xs font-medium rounded transition-colors cursor-pointer ${
                 side === 'buy'
-                  ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-500/40 shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-800/80 font-semibold'
+                  : 'text-zinc-400 hover:text-zinc-200'
               }`}
             >
-              <ArrowUpRight size={14} />
-              <span>Compra</span>
+              Compra
             </button>
             <button
               type="button"
               onClick={() => setSide('sell')}
-              className={`flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              className={`py-1.5 text-xs font-medium rounded transition-colors cursor-pointer ${
                 side === 'sell'
-                  ? 'bg-rose-950/80 text-rose-300 border border-rose-500/40 shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-red-950/80 text-red-300 border border-red-800/80 font-semibold'
+                  : 'text-zinc-400 hover:text-zinc-200'
               }`}
             >
-              <ArrowDownLeft size={14} />
-              <span>Venda</span>
+              Venda
             </button>
             <button
               type="button"
               onClick={() => setSide('short')}
-              className={`py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              className={`py-1 text-[11px] rounded transition-colors cursor-pointer ${
                 side === 'short'
-                  ? 'bg-indigo-950/80 text-indigo-300 border border-indigo-500/40'
-                  : 'text-slate-500 hover:text-slate-300'
+                  ? 'bg-zinc-800 text-zinc-200 font-semibold'
+                  : 'text-zinc-500 hover:text-zinc-300'
               }`}
             >
               Short
@@ -173,10 +166,10 @@ export default function OrderForm({ onCreateOrder, defaultSymbol }) {
             <button
               type="button"
               onClick={() => setSide('cover')}
-              className={`py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              className={`py-1 text-[11px] rounded transition-colors cursor-pointer ${
                 side === 'cover'
-                  ? 'bg-amber-950/80 text-amber-300 border border-amber-500/40'
-                  : 'text-slate-500 hover:text-slate-300'
+                  ? 'bg-zinc-800 text-zinc-200 font-semibold'
+                  : 'text-zinc-500 hover:text-zinc-300'
               }`}
             >
               Cobrir
@@ -184,17 +177,17 @@ export default function OrderForm({ onCreateOrder, defaultSymbol }) {
           </div>
         </div>
 
-        {/* Tipo de Execução */}
-        <div>
-          <label className="block text-xs font-medium text-slate-400 mb-1.5 pl-1">Tipo de Ordem</label>
-          <div className="grid grid-cols-2 gap-1.5 bg-slate-950/80 p-1 rounded-xl border border-white/5">
+        {/* Execution Type */}
+        <div className="space-y-1">
+          <label className="block text-xs font-medium text-zinc-400">Tipo de Execução</label>
+          <div className="grid grid-cols-2 gap-1 p-1 bg-[#0c0c0e] border border-zinc-800 rounded-md">
             <button
               type="button"
               onClick={() => setOrderType('market')}
-              className={`py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              className={`py-1 text-xs font-medium rounded transition-colors cursor-pointer ${
                 orderType === 'market'
-                  ? 'bg-slate-800 text-white border border-white/10 shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-zinc-800 text-zinc-100 font-semibold shadow-sm'
+                  : 'text-zinc-500 hover:text-zinc-300'
               }`}
             >
               A Mercado
@@ -202,10 +195,10 @@ export default function OrderForm({ onCreateOrder, defaultSymbol }) {
             <button
               type="button"
               onClick={() => setOrderType('limit')}
-              className={`py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              className={`py-1 text-xs font-medium rounded transition-colors cursor-pointer ${
                 orderType === 'limit'
-                  ? 'bg-slate-800 text-white border border-white/10 shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-zinc-800 text-zinc-100 font-semibold shadow-sm'
+                  : 'text-zinc-500 hover:text-zinc-300'
               }`}
             >
               Limitada
@@ -213,18 +206,17 @@ export default function OrderForm({ onCreateOrder, defaultSymbol }) {
           </div>
         </div>
 
-        {/* Quantidade & Quick Percent Chips */}
-        <div>
-          <div className="flex items-center justify-between mb-1.5 pl-1 pr-1">
-            <label className="text-xs font-medium text-slate-400">Quantidade</label>
-            {/* Quick % Chips */}
+        {/* Quantity & Quick Chips */}
+        <div className="space-y-1">
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-medium text-zinc-400">Quantidade</label>
             <div className="flex gap-1">
               {[25, 50, 75, 100].map((pct) => (
                 <button
                   key={pct}
                   type="button"
                   onClick={() => handleQuickPercent(pct)}
-                  className="chip-preset px-1.5 py-0.5 rounded text-[10px] font-bold text-slate-400 cursor-pointer"
+                  className="px-1.5 py-0.5 rounded text-[10px] font-mono-nums bg-[#18181b] border border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-zinc-200 cursor-pointer"
                 >
                   {pct === 100 ? 'MAX' : `${pct}%`}
                 </button>
@@ -236,56 +228,58 @@ export default function OrderForm({ onCreateOrder, defaultSymbol }) {
             type="number"
             min="1"
             step="1"
-            placeholder="Qtd de ações..."
+            placeholder="0"
             value={quantity}
             onChange={(e) => setQuantity(e.target.value)}
-            className="w-full bg-slate-950/60 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white font-medium focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 transition-all placeholder-slate-600"
+            className="w-full input-institutional px-3 py-2 text-xs font-mono-nums text-zinc-100"
             required
           />
         </div>
 
-        {/* Preço Limite */}
+        {/* Limit Price */}
         {orderType === 'limit' && (
-          <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1.5 pl-1">Preço Limite (R$)</label>
+          <div className="space-y-1">
+            <label className="block text-xs font-medium text-zinc-400">Preço Limite (R$)</label>
             <input
               type="number"
               min="0.01"
               step="0.01"
-              placeholder="R$ 0,00"
+              placeholder="0,00"
               value={limitPrice}
               onChange={(e) => setLimitPrice(e.target.value)}
-              className="w-full bg-slate-950/60 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white font-medium focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 transition-all placeholder-slate-600"
+              className="w-full input-institutional px-3 py-2 text-xs font-mono-nums text-zinc-100"
               required
             />
           </div>
         )}
 
-        {/* Live Estimate Card */}
+        {/* Total Estimate */}
         {totalEstimate > 0 && (
-          <div className="bg-slate-950/70 p-3.5 rounded-xl border border-white/5 text-xs text-slate-400 space-y-1.5">
-            <div className="flex justify-between items-center">
-              <span>Volume Total:</span>
-              <span className="text-white font-black text-sm">
-                R$ {totalEstimate.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </span>
-            </div>
+          <div className="p-3 bg-[#0c0c0e] border border-zinc-800 rounded-md flex justify-between items-center text-xs">
+            <span className="text-zinc-500">Volume Total:</span>
+            <span className="font-mono-nums font-semibold text-zinc-100">
+              R$ {totalEstimate.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </span>
           </div>
         )}
 
         {/* Feedbacks */}
-        {error && <div className="text-xs text-rose-450 bg-rose-950/30 border border-rose-900/30 p-3 rounded-xl font-medium">{error}</div>}
-        {message && <div className="text-xs text-emerald-400 bg-emerald-950/30 border border-emerald-900/30 p-3 rounded-xl font-medium">{message}</div>}
+        {error && <div className="text-xs text-red-400 bg-red-950/40 border border-red-900/50 p-2.5 rounded-md">{error}</div>}
+        {message && <div className="text-xs text-emerald-400 bg-emerald-950/40 border border-emerald-900/50 p-2.5 rounded-md">{message}</div>}
 
-        {/* Submit Button */}
+        {/* Submit */}
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-3.5 btn-neon text-white rounded-xl font-bold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          className={`w-full py-2 text-xs font-semibold rounded-md transition-colors cursor-pointer ${
+            side === 'buy' 
+              ? 'bg-emerald-600 hover:bg-emerald-500 text-zinc-950' 
+              : 'bg-red-600 hover:bg-red-500 text-zinc-100'
+          } disabled:opacity-50`}
         >
-          {loading ? 'Executando...' : side === 'buy' ? 'Confirmar Compra' : 'Confirmar Ordem'}
+          {loading ? 'Processando...' : side === 'buy' ? 'Executar Compra' : 'Executar Venda'}
         </button>
       </form>
-    </SpotlightCard>
+    </div>
   )
 }

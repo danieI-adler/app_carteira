@@ -1,7 +1,6 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../services/supabase'
-import { Shield } from 'lucide-react'
 
 export default function Admin() {
   const [teams, setTeams] = useState([])
@@ -14,7 +13,6 @@ export default function Admin() {
     try {
       setLoading(true)
       
-      // 1. Fetch Teams
       const { data: teamsData, error: teamsError } = await supabase
         .from('teams')
         .select('*')
@@ -22,7 +20,6 @@ export default function Admin() {
       if (teamsError) throw teamsError
       setTeams(teamsData || [])
 
-      // 2. Fetch Profiles with Team info
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select(`
@@ -61,7 +58,7 @@ export default function Admin() {
 
       if (error) throw error
       setNewTeamName('')
-      alert('Equipe criada com sucesso!')
+      alert('Equipe criada com sucesso.')
       fetchData()
     } catch (err) {
       alert('Erro ao criar equipe: ' + err.message)
@@ -78,100 +75,94 @@ export default function Admin() {
         .eq('id', profileId)
 
       if (error) throw error
-      alert('Equipe do usuário atualizada!')
+      alert('Equipe atualizada com sucesso.')
       fetchData()
     } catch (err) {
-      alert('Erro ao vincular usuário à equipe: ' + err.message)
+      alert('Erro ao vincular equipe: ' + err.message)
     }
   }
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8">
-      {/* Background glow effects */}
-      <div className="absolute top-0 right-1/4 w-[400px] h-[400px] bg-indigo-500/5 rounded-full blur-[100px] pointer-events-none"></div>
-      <div className="absolute top-1/2 left-0 w-[300px] h-[300px] bg-purple-500/5 rounded-full blur-[120px] pointer-events-none"></div>
-
+    <div className="max-w-7xl mx-auto space-y-6">
+      
       {/* Header */}
-      <div className="glass-card rounded-2xl p-6 border border-white/5 shadow-2xl relative z-10">
-        <div className="flex items-center gap-2 text-indigo-400 text-xs font-semibold uppercase tracking-widest">
-          <Shield size={16} />
-          <span>Painel Operacional</span>
-        </div>
-        <h1 className="text-3xl font-black text-white tracking-tight mt-1">Administração</h1>
-        <p className="text-slate-400 text-xs mt-1">Configuração, gerenciamento de equipes e usuários.</p>
+      <div className="border-b border-zinc-800 pb-4">
+        <div className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider">Controle do Sistema</div>
+        <h1 className="text-xl font-semibold text-zinc-100 tracking-tight mt-0.5">Painel Administrativo</h1>
       </div>
 
       {loading ? (
-        <div className="text-center py-16 text-slate-500">Carregando painel administrativo...</div>
+        <div className="text-center py-16 text-zinc-500 text-xs">Carregando painel...</div>
       ) : (
-        <main className="grid grid-cols-1 lg:grid-cols-3 gap-8 relative z-10">
+        <main className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
-          {/* Create Team Form */}
-          <section className="glass-card rounded-2xl p-6 border border-white/5 shadow-xl h-fit space-y-4">
-            <h2 className="text-lg font-bold text-white tracking-tight border-b border-white/5 pb-3">Criar Nova Equipe</h2>
-            <form onSubmit={handleCreateTeam} className="space-y-4">
-              <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1.5 pl-1">Nome da Equipe</label>
+          {/* Create Team */}
+          <div className="surface-card p-5 h-fit space-y-4">
+            <h2 className="text-sm font-semibold text-zinc-100 border-b border-zinc-800 pb-3">Criar Equipe</h2>
+            <form onSubmit={handleCreateTeam} className="space-y-3.5">
+              <div className="space-y-1">
+                <label className="block text-xs font-medium text-zinc-400">Nome da Equipe</label>
                 <input
                   type="text"
+                  placeholder="Nome oficial..."
                   value={newTeamName}
                   onChange={(e) => setNewTeamName(e.target.value)}
-                  className="w-full bg-slate-950/50 border border-white/5 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 transition-all"
+                  className="w-full input-institutional px-3 py-2 text-xs"
                   required
                 />
               </div>
               <button
                 type="submit"
                 disabled={creating}
-                className="w-full py-3.5 btn-neon text-white rounded-xl font-bold text-sm transition-all cursor-pointer"
+                className="w-full py-2 btn-primary text-xs cursor-pointer disabled:opacity-50"
               >
-                {creating ? 'Criando...' : 'Salvar Equipe'}
+                {creating ? 'Processando...' : 'Cadastrar Equipe'}
               </button>
             </form>
-          </section>
+          </div>
 
-          {/* Users & Team Assignment List */}
-          <section className="glass-card rounded-2xl p-6 border border-white/5 shadow-xl lg:col-span-2 space-y-6">
-            <div>
-              <h2 className="text-lg font-bold text-white tracking-tight">Vincular Usuários</h2>
-              <p className="text-xs text-slate-400 mt-1">Gerencie os participantes e defina a qual equipe pertencem.</p>
+          {/* User Assignments */}
+          <div className="surface-card lg:col-span-2">
+            <div className="px-5 py-3.5 border-b border-zinc-800 flex items-center justify-between">
+              <h2 className="text-sm font-semibold text-zinc-100">Gerenciamento de Participantes</h2>
+              <span className="text-xs text-zinc-500 font-mono-nums">{profiles.length} usuários</span>
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse text-sm">
+              <table className="w-full text-left border-collapse text-xs">
                 <thead>
-                  <tr className="border-b border-white/5 text-slate-450 text-xs font-bold uppercase tracking-wider">
-                    <th className="py-3 px-4 sm:px-6">Nome</th>
-                    <th className="py-3 px-4 sm:px-6">Função</th>
-                    <th className="py-3 px-4 sm:px-6">Equipe Atual</th>
-                    <th className="py-3 px-4 sm:px-6 text-right">Alterar Equipe</th>
+                  <tr className="border-b border-zinc-800 text-zinc-400 bg-[#0c0c0e]">
+                    <th className="py-2.5 px-4 font-medium">Nome</th>
+                    <th className="py-2.5 px-4 font-medium">Permissão</th>
+                    <th className="py-2.5 px-4 font-medium">Equipe Atual</th>
+                    <th className="py-2.5 px-4 text-right font-medium">Alterar Equipe</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/5">
+                <tbody className="divide-y divide-zinc-850">
                   {profiles.map((profile) => (
-                    <tr key={profile.id} className="hover:bg-white/[0.02] transition-colors">
-                      <td className="py-3.5 px-4 sm:px-6 text-slate-200 font-bold">{profile.name}</td>
-                      <td className="py-3.5 px-4 sm:px-6 capitalize text-xs">
+                    <tr key={profile.id} className="table-row-hover">
+                      <td className="py-3 px-4 font-semibold text-zinc-100">{profile.name}</td>
+                      <td className="py-3 px-4 text-xs font-sans">
                         {profile.role === 'admin' ? (
-                          <span className="bg-indigo-950/40 text-indigo-400 px-2.5 py-0.5 rounded-lg border border-indigo-900/30 font-black uppercase text-[10px]">
+                          <span className="bg-zinc-800 text-zinc-200 px-2 py-0.5 rounded text-[10px] font-semibold uppercase">
                             Admin
                           </span>
                         ) : (
-                          <span className="text-slate-400 font-medium">Participante</span>
+                          <span className="text-zinc-500">Usuário</span>
                         )}
                       </td>
-                      <td className="py-3.5 px-4 sm:px-6 text-slate-300 font-bold text-xs">
-                        {profile.teams?.name || <span className="text-slate-550 italic font-normal">Sem Equipe</span>}
+                      <td className="py-3 px-4 text-zinc-300">
+                        {profile.teams?.name || <span className="text-zinc-600 italic">Sem Equipe</span>}
                       </td>
-                      <td className="py-3.5 px-4 sm:px-6 text-right">
+                      <td className="py-3 px-4 text-right">
                         <select
                           value={profile.team_id || ''}
                           onChange={(e) => handleUpdateUserTeam(profile.id, e.target.value)}
-                          className="bg-slate-950/50 border border-white/5 rounded-xl px-3 py-1.5 text-xs text-slate-350 focus:outline-none"
+                          className="input-institutional px-2.5 py-1 text-xs"
                         >
-                          <option value="" className="bg-slate-900 text-slate-300">-- Sem Equipe --</option>
+                          <option value="" className="bg-[#111114] text-zinc-400">-- Sem Equipe --</option>
                           {teams.map((team) => (
-                            <option key={team.id} value={team.id} className="bg-slate-900 text-slate-300">
+                            <option key={team.id} value={team.id} className="bg-[#111114] text-zinc-200">
                               {team.name}
                             </option>
                           ))}
@@ -182,7 +173,7 @@ export default function Admin() {
                 </tbody>
               </table>
             </div>
-          </section>
+          </div>
 
         </main>
       )}
