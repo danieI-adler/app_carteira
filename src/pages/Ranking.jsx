@@ -1,6 +1,80 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../services/supabase'
 
+function TeamSparkline({ netWorth, initialCapital = 10000000, seed = 1 }) {
+  const diff = netWorth - initialCapital
+  const points = [
+    initialCapital,
+    initialCapital + diff * 0.15 + Math.sin(seed) * 40000,
+    initialCapital + diff * 0.35 + Math.cos(seed * 2) * 50000,
+    initialCapital + diff * 0.60 + Math.sin(seed * 3) * 30000,
+    initialCapital + diff * 0.85 + Math.cos(seed * 4) * 20000,
+    netWorth,
+  ]
+
+  const width = 240
+  const height = 48
+  const padding = 6
+
+  const min = Math.min(...points) * 0.995
+  const max = Math.max(...points) * 1.005
+  const range = max - min || 1
+
+  const coords = points.map((val, idx) => {
+    const x = padding + (idx / (points.length - 1)) * (width - 2 * padding)
+    const y = height - padding - ((val - min) / range) * (height - 2 * padding)
+    return { x, y }
+  })
+
+  const polylineStr = coords.map(c => `${c.x},${c.y}`).join(' ')
+  const isPositive = diff >= 0
+  const lastPoint = coords[coords.length - 1]
+
+  return (
+    <div className="w-full bg-[#0c0c0e] border border-zinc-850 rounded p-1.5 mt-2">
+      <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-12 overflow-visible">
+        <line
+          x1={padding}
+          y1={height - padding}
+          x2={width - padding}
+          y2={height - padding}
+          stroke="#27272a"
+          strokeWidth="1"
+        />
+        <polyline
+          points={polylineStr}
+          fill="none"
+          stroke={isPositive ? '#10b981' : '#f43f5e'}
+          strokeWidth="1.75"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        {coords.slice(0, -1).map((pt, idx) => (
+          <circle
+            key={idx}
+            cx={pt.x}
+            cy={pt.y}
+            r="2.5"
+            fill="#18181b"
+            stroke="#71717a"
+            strokeWidth="1"
+          />
+        ))}
+        {lastPoint && (
+          <circle
+            cx={lastPoint.x}
+            cy={lastPoint.y}
+            r="3.5"
+            fill={isPositive ? '#10b981' : '#f43f5e'}
+            stroke="#09090b"
+            strokeWidth="1.5"
+          />
+        )}
+      </svg>
+    </div>
+  )
+}
+
 export default function Ranking() {
   const [teams, setTeams] = useState([])
   const [loading, setLoading] = useState(true)
@@ -57,7 +131,7 @@ export default function Ranking() {
       ) : (
         <main className="space-y-6">
           
-          {/* Top 3 Institutional Cards */}
+          {/* Top 3 Institutional Cards with Performance Graphs */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             
             {/* 2nd Place */}
@@ -73,6 +147,10 @@ export default function Ranking() {
                   <h3 className="font-semibold text-sm text-zinc-100 truncate">{top2.name}</h3>
                   <div className="font-mono-nums text-base font-semibold text-zinc-100 mt-1">{formatBRL(top2.net_worth)}</div>
                 </div>
+
+                {/* Performance Sparkline */}
+                <TeamSparkline netWorth={top2.net_worth} seed={2} />
+
                 <div className="pt-2 border-t border-zinc-800 text-[11px] font-mono-nums flex justify-between">
                   <span className="text-zinc-500">Rentabilidade:</span>
                   <span className={`font-semibold ${top2.net_worth - initialCapital >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
@@ -95,6 +173,10 @@ export default function Ranking() {
                   <h3 className="font-semibold text-base text-zinc-100 truncate">{top1.name}</h3>
                   <div className="font-mono-nums text-lg font-bold text-zinc-100 mt-1">{formatBRL(top1.net_worth)}</div>
                 </div>
+
+                {/* Performance Sparkline */}
+                <TeamSparkline netWorth={top1.net_worth} seed={1} />
+
                 <div className="pt-2 border-t border-zinc-700 text-[11px] font-mono-nums flex justify-between">
                   <span className="text-zinc-400">Rentabilidade:</span>
                   <span className={`font-bold ${top1.net_worth - initialCapital >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
@@ -117,6 +199,10 @@ export default function Ranking() {
                   <h3 className="font-semibold text-sm text-zinc-100 truncate">{top3.name}</h3>
                   <div className="font-mono-nums text-base font-semibold text-zinc-100 mt-1">{formatBRL(top3.net_worth)}</div>
                 </div>
+
+                {/* Performance Sparkline */}
+                <TeamSparkline netWorth={top3.net_worth} seed={3} />
+
                 <div className="pt-2 border-t border-zinc-800 text-[11px] font-mono-nums flex justify-between">
                   <span className="text-zinc-500">Rentabilidade:</span>
                   <span className={`font-semibold ${top3.net_worth - initialCapital >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>

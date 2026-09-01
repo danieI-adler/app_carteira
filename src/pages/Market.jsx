@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../services/supabase'
 import useOrders from '../hooks/useOrders'
 import OrderForm from '../components/business/OrderForm'
+import AssetChartCard from '../components/business/AssetChartCard'
 import { autoUpdatePricesClientSide } from '../utils/priceSync'
 import { getMarketStatus } from '../utils/marketSchedule'
 import { 
@@ -9,7 +10,9 @@ import {
   ChevronUp, 
   Search, 
   Plus,
-  Clock
+  Clock,
+  LayoutGrid,
+  Table as TableIcon
 } from 'lucide-react'
 
 export default function Market() {
@@ -20,6 +23,8 @@ export default function Market() {
   const [categoryFilter, setCategoryFilter] = useState('all') // all, acao, fii, etf
   const [isQuotesOpen, setIsQuotesOpen] = useState(true)
   const [selectedAssetSymbol, setSelectedAssetSymbol] = useState('')
+  const [viewMode, setViewMode] = useState('charts') // 'charts' or 'table'
+  const [timeframe, setTimeframe] = useState('1w') // '1d', '1w', '1m'
 
   const marketStatus = getMarketStatus()
 
@@ -100,20 +105,48 @@ export default function Market() {
 
       <main className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {/* Left Columns: Quotes list */}
+        {/* Left Columns: Quotes list / Chart Grid */}
         <div className="surface-card lg:col-span-2 h-fit">
           <div className="p-4 border-b border-zinc-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-            <button
-              onClick={() => setIsQuotesOpen(!isQuotesOpen)}
-              className="flex items-center gap-2 text-left group cursor-pointer"
-            >
-              <h2 className="text-sm font-semibold text-zinc-100 group-hover:text-zinc-300">
-                Livro de Cotações (B3)
-              </h2>
-              <span className="text-zinc-500 group-hover:text-zinc-300">
-                {isQuotesOpen ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
-              </span>
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setIsQuotesOpen(!isQuotesOpen)}
+                className="flex items-center gap-2 text-left group cursor-pointer"
+              >
+                <h2 className="text-sm font-semibold text-zinc-100 group-hover:text-zinc-300">
+                  Cotações da B3
+                </h2>
+                <span className="text-zinc-500 group-hover:text-zinc-300">
+                  {isQuotesOpen ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+                </span>
+              </button>
+
+              {/* View Mode Switcher (Charts vs Table) */}
+              {isQuotesOpen && (
+                <div className="flex items-center bg-[#0c0c0e] border border-zinc-800 rounded p-0.5">
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('charts')}
+                    className={`p-1 rounded text-xs transition-colors cursor-pointer ${
+                      viewMode === 'charts' ? 'bg-zinc-800 text-zinc-100 font-medium' : 'text-zinc-500 hover:text-zinc-300'
+                    }`}
+                    title="Visualização em Gráficos"
+                  >
+                    <LayoutGrid size={14} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('table')}
+                    className={`p-1 rounded text-xs transition-colors cursor-pointer ${
+                      viewMode === 'table' ? 'bg-zinc-800 text-zinc-100 font-medium' : 'text-zinc-500 hover:text-zinc-300'
+                    }`}
+                    title="Visualização em Tabela"
+                  >
+                    <TableIcon size={14} />
+                  </button>
+                </div>
+              )}
+            </div>
             
             {/* Search Input */}
             {isQuotesOpen && (
@@ -130,35 +163,81 @@ export default function Market() {
             )}
           </div>
 
-          {/* Category Tabs */}
+          {/* Sub-header: Categories and Timeframe Selectors */}
           {isQuotesOpen && (
-            <div className="px-4 py-2 bg-[#0c0c0e] border-b border-zinc-800 flex gap-1.5 overflow-x-auto">
-              {[
-                { id: 'all', label: 'Todos os Ativos' },
-                { id: 'acao', label: 'Ações' },
-                { id: 'fii', label: 'FIIs' },
-                { id: 'etf', label: 'ETFs' },
-              ].map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => setCategoryFilter(cat.id)}
-                  className={`px-2.5 py-1 rounded text-xs font-medium transition-colors cursor-pointer ${
-                    categoryFilter === cat.id
-                      ? 'bg-zinc-800 text-zinc-100 font-semibold'
-                      : 'text-zinc-500 hover:text-zinc-300'
-                  }`}
-                >
-                  {cat.label}
-                </button>
-              ))}
+            <div className="px-4 py-2 bg-[#0c0c0e] border-b border-zinc-800 flex flex-wrap items-center justify-between gap-2">
+              {/* Category Tabs */}
+              <div className="flex gap-1.5 overflow-x-auto">
+                {[
+                  { id: 'all', label: 'Todos os Ativos' },
+                  { id: 'acao', label: 'Ações' },
+                  { id: 'fii', label: 'FIIs' },
+                  { id: 'etf', label: 'ETFs' },
+                ].map((cat) => (
+                  <button
+                    key={cat.id}
+                    onClick={() => setCategoryFilter(cat.id)}
+                    className={`px-2.5 py-1 rounded text-xs font-medium transition-colors cursor-pointer ${
+                      categoryFilter === cat.id
+                        ? 'bg-zinc-800 text-zinc-100 font-semibold'
+                        : 'text-zinc-500 hover:text-zinc-300'
+                    }`}
+                  >
+                    {cat.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Timeframe selector (1D, 1S, 1M) for chart view */}
+              {viewMode === 'charts' && (
+                <div className="flex items-center gap-1 bg-zinc-900 border border-zinc-800 rounded p-0.5">
+                  <button
+                    onClick={() => setTimeframe('1d')}
+                    className={`px-2 py-0.5 rounded text-[10px] font-mono-nums font-semibold transition-colors cursor-pointer ${
+                      timeframe === '1d' ? 'bg-zinc-800 text-zinc-100 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'
+                    }`}
+                  >
+                    1D
+                  </button>
+                  <button
+                    onClick={() => setTimeframe('1w')}
+                    className={`px-2 py-0.5 rounded text-[10px] font-mono-nums font-semibold transition-colors cursor-pointer ${
+                      timeframe === '1w' ? 'bg-zinc-800 text-zinc-100 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'
+                    }`}
+                  >
+                    1S
+                  </button>
+                  <button
+                    onClick={() => setTimeframe('1m')}
+                    className={`px-2 py-0.5 rounded text-[10px] font-mono-nums font-semibold transition-colors cursor-pointer ${
+                      timeframe === '1m' ? 'bg-zinc-800 text-zinc-100 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'
+                    }`}
+                  >
+                    1M
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
-          {/* Table */}
+          {/* Body: Charts Grid or Table */}
           {isQuotesOpen && (
             assetsLoading ? (
               <div className="text-center py-12 text-zinc-500 text-xs">Carregando cotações...</div>
+            ) : viewMode === 'charts' ? (
+              /* GRID DE GRÁFICOS (Inspirado no modelo de referência) */
+              <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[560px] overflow-y-auto">
+                {filteredAssets.map((asset) => (
+                  <AssetChartCard
+                    key={asset.symbol}
+                    asset={asset}
+                    timeframe={timeframe}
+                    onSelect={(symbol) => setSelectedAssetSymbol(symbol)}
+                  />
+                ))}
+              </div>
             ) : (
+              /* TABELA DE COTAÇÕES */
               <div className="overflow-x-auto max-h-[460px] overflow-y-auto">
                 <table className="w-full text-left border-collapse text-xs">
                   <thead>

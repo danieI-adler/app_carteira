@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import usePortfolio from '../hooks/usePortfolio'
+import PieChart from '../components/ui/PieChart'
 
 export default function Analytics() {
   const { team, positions, loading, error } = usePortfolio()
@@ -140,31 +141,8 @@ export default function Analytics() {
             <span className="text-xs font-mono-nums text-zinc-500">{positions.length} ativos</span>
           </div>
 
-          <div className="w-full h-3 rounded bg-zinc-900 border border-zinc-800 overflow-hidden flex">
-            {Object.values(allocation).map((item, idx) => (
-              <div 
-                key={idx} 
-                style={{ width: `${item.percent}%`, backgroundColor: item.color }} 
-                className="h-full"
-                title={`${item.label}: ${item.percent.toFixed(1)}%`}
-              />
-            ))}
-          </div>
-
-          <div className="space-y-2">
-            {Object.values(allocation).map((item, idx) => (
-              <div key={idx} className="flex items-center justify-between p-2.5 bg-[#0c0c0e] border border-zinc-800/80 rounded">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: item.color }} />
-                  <div>
-                    <span className="text-xs font-medium text-zinc-200 block">{item.label}</span>
-                    <span className="text-[11px] font-mono-nums text-zinc-500">{formatBRL(item.value)}</span>
-                  </div>
-                </div>
-                <span className="font-mono-nums text-xs font-semibold text-zinc-100">{item.percent.toFixed(1)}%</span>
-              </div>
-            ))}
-          </div>
+          {/* Gráfico de Pizza / Donut */}
+          <PieChart data={Object.values(allocation)} totalValue={netWorth} />
         </div>
 
         {/* Wealth Evolution */}
