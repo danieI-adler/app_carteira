@@ -32,10 +32,10 @@ export default function Dashboard() {
   }
 
   const teamName = team?.name || 'Equipe'
-  const balance = team?.balance ?? 10000000.00
-  const netWorth = team?.net_worth ?? 10000000.00
-  const totalProfit = netWorth - 10000000.00
-  const profitPercent = (totalProfit / 10000000.00) * 100
+  const balance = team?.balance ?? 100000000.00
+  const netWorth = team?.net_worth ?? 100000000.00
+  const totalProfit = netWorth - 100000000.00
+  const profitPercent = (totalProfit / 100000000.00) * 100
   const monthlySavingsYield = balance * 0.005
 
   return (
@@ -78,7 +78,7 @@ export default function Dashboard() {
             <span>{totalProfit >= 0 ? '+' : ''}{formatBRL(totalProfit)}</span>
           </div>
           <div className={`text-[11px] font-medium ${totalProfit >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
-            {totalProfit >= 0 ? '+' : ''}{profitPercent.toFixed(2)}% sobre R$ 10M base
+            {totalProfit >= 0 ? '+' : ''}{profitPercent.toFixed(2)}% sobre R$ 100M base
           </div>
         </div>
 

@@ -14,8 +14,8 @@ export default function Analytics() {
     }).format(val || 0)
   }
 
-  const balance = team?.balance ?? 10000000.00
-  const netWorth = team?.net_worth ?? 10000000.00
+  const balance = team?.balance ?? 100000000.00
+  const netWorth = team?.net_worth ?? 100000000.00
   const monthlySavingsYield = balance * 0.005
 
   const allocation = useMemo(() => {
@@ -65,7 +65,7 @@ export default function Analytics() {
   }, [positions, balance, netWorth])
 
   const evolutionPoints = useMemo(() => {
-    const initial = 10000000
+    const initial = 100000000
     const current = netWorth
     const diff = current - initial
 
@@ -214,7 +214,7 @@ export default function Analytics() {
           <div className="flex justify-between items-center border-b border-zinc-800 pb-3">
             <h2 className="text-sm font-semibold text-zinc-100">Trajetória do Patrimônio</h2>
             <span className="font-mono-nums text-xs font-semibold text-emerald-400">
-              {(((netWorth - 10000000) / 10000000) * 100).toFixed(2)}% Total
+              {(((netWorth - 100000000) / 100000000) * 100).toFixed(2)}% Total
             </span>
           </div>
 
@@ -265,7 +265,7 @@ export default function Analytics() {
           <div className="grid grid-cols-2 gap-3">
             <div className="p-3 bg-[#0c0c0e] border border-zinc-800 rounded">
               <span className="text-[10px] text-zinc-500 font-medium uppercase block">Capital Base</span>
-              <span className="font-mono-nums text-xs font-semibold text-zinc-200 block mt-0.5">R$ 10.000.000,00</span>
+              <span className="font-mono-nums text-xs font-semibold text-zinc-200 block mt-0.5">R$ 100.000.000,00</span>
             </div>
             <div className="p-3 bg-[#0c0c0e] border border-zinc-800 rounded">
               <span className="text-[10px] text-zinc-500 font-medium uppercase block">Patrimônio Líquido</span>

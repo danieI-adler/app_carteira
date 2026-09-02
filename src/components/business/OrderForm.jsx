@@ -41,7 +41,7 @@ export default function OrderForm({ onCreateOrder, defaultSymbol }) {
   }, [defaultSymbol])
 
   const selectedAsset = assets.find((a) => a.symbol === selectedSymbol)
-  const availableBalance = team?.balance ?? 10000000.00
+  const availableBalance = team?.balance ?? 100000000.00
   const activePosition = positions.find((p) => p.asset_symbol === selectedSymbol)
 
   // Quick percentage calculation handler

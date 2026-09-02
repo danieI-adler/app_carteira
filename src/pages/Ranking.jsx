@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../services/supabase'
 
-function TeamSparkline({ netWorth, initialCapital = 10000000 }) {
+function TeamSparkline({ netWorth, initialCapital = 100000000 }) {
   const diff = (netWorth || initialCapital) - initialCapital
   const hasNoActivity = Math.abs(diff) < 0.01
 
@@ -128,7 +128,7 @@ export default function Ranking() {
   const top1 = teams[0]
   const top2 = teams[1]
   const top3 = teams[2]
-  const initialCapital = 10000000.00
+  const initialCapital = 100000000.00
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">

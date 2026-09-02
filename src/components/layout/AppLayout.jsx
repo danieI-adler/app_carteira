@@ -104,7 +104,7 @@ export default function AppLayout() {
               <div className="pt-2 border-t border-zinc-800/80 flex items-center justify-between text-xs">
                 <span className="text-zinc-500 text-[11px]">Patrimônio</span>
                 <span className="font-mono-nums font-semibold text-emerald-400">
-                  {formatBRL(team?.net_worth || 10000000)}
+                  {formatBRL(team?.net_worth || 100000000)}
                 </span>
               </div>
             </div>

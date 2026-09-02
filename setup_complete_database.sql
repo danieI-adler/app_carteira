@@ -14,8 +14,8 @@ DROP TRIGGER IF EXISTS on_asset_price_update ON public.assets;
 CREATE TABLE IF NOT EXISTS public.teams (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT UNIQUE NOT NULL,
-    balance NUMERIC(15, 2) NOT NULL DEFAULT 10000000.00,
-    net_worth NUMERIC(15, 2) NOT NULL DEFAULT 10000000.00,
+    balance NUMERIC(15, 2) NOT NULL DEFAULT 100000000.00,
+    net_worth NUMERIC(15, 2) NOT NULL DEFAULT 100000000.00,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 

@@ -54,7 +54,7 @@ export default function Admin() {
     try {
       const { error } = await supabase
         .from('teams')
-        .insert({ name: newTeamName.trim(), balance: 10000000.00 })
+        .insert({ name: newTeamName.trim(), balance: 100000000.00 })
 
       if (error) throw error
       setNewTeamName('')
