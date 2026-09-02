@@ -1,5 +1,6 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 import { useState, useMemo, useEffect, useRef } from 'react'
+import assetsHistory from '../../data/assetsHistory.json'
 
 // Memory cache to avoid repeated network calls for the same symbol/timeframe
 const chartCache = new Map()
@@ -20,13 +21,18 @@ export default function AssetChartCard({ asset, timeframe = '1w', onSelect }) {
   const currentPrice = asset.last_price || 30.00
   const symbol = asset.symbol
 
-  // Fetch real historical OHLC data with preference for server-synced chart_data
+  // Fetch real historical OHLC data with bundled static fallback & server-synced chart_data
   useEffect(() => {
     let isCancelled = false
     const cacheKey = `${symbol}_${timeframe}`
 
     if (asset.chart_data && asset.chart_data[timeframe] && asset.chart_data[timeframe].length >= 2) {
       setFetchedData(asset.chart_data[timeframe])
+      return
+    }
+
+    if (assetsHistory && assetsHistory[symbol] && assetsHistory[symbol][timeframe] && assetsHistory[symbol][timeframe].length >= 2) {
+      setFetchedData(assetsHistory[symbol][timeframe])
       return
     }
 
@@ -134,6 +140,8 @@ export default function AssetChartCard({ asset, timeframe = '1w', onSelect }) {
 
     if (fetchedData && fetchedData.length >= 2) {
       series = fetchedData.map(p => ({ ...p }))
+    } else if (assetsHistory && assetsHistory[symbol] && assetsHistory[symbol][timeframe] && assetsHistory[symbol][timeframe].length >= 2) {
+      series = assetsHistory[symbol][timeframe].map(p => ({ ...p }))
     } else {
       // High-resolution fallback calculation
       let hash = 0
