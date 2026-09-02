@@ -183,15 +183,13 @@ export default function AssetChartCard({ asset, timeframe = '1w', onSelect }) {
       }
     }
 
-    // ALWAYS enforce that the last point is strictly the current price
+    // ALWAYS enforce that the last point is strictly the current price labeled 'Atual'
     if (series.length > 0) {
       const lastIdx = series.length - 1
       series[lastIdx] = {
         ...series[lastIdx],
         price: parseFloat(currentPrice.toFixed(2)),
-        label: series[lastIdx].label.includes(':') || series[lastIdx].label.includes('/') 
-          ? `${series[lastIdx].label} (Atual)` 
-          : 'Atual'
+        label: 'Atual',
       }
     }
 
