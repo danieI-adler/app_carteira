@@ -1,33 +1,50 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../services/supabase'
 
-function TeamSparkline({ netWorth, initialCapital = 10000000, seed = 1 }) {
-  const diff = netWorth - initialCapital
-  const points = [
-    initialCapital,
-    initialCapital + diff * 0.15 + Math.sin(seed) * 40000,
-    initialCapital + diff * 0.35 + Math.cos(seed * 2) * 50000,
-    initialCapital + diff * 0.60 + Math.sin(seed * 3) * 30000,
-    initialCapital + diff * 0.85 + Math.cos(seed * 4) * 20000,
-    netWorth,
-  ]
+function TeamSparkline({ netWorth, initialCapital = 10000000 }) {
+  const diff = (netWorth || initialCapital) - initialCapital
+  const hasNoActivity = Math.abs(diff) < 0.01
+
+  // If no operations / 0 variation, render a completely flat straight line at initial capital
+  const points = hasNoActivity
+    ? [initialCapital, initialCapital, initialCapital, initialCapital, initialCapital, initialCapital]
+    : [
+        initialCapital,
+        initialCapital + diff * 0.2,
+        initialCapital + diff * 0.45,
+        initialCapital + diff * 0.65,
+        initialCapital + diff * 0.85,
+        netWorth,
+      ]
 
   const width = 240
   const height = 48
   const padding = 6
 
-  const min = Math.min(...points) * 0.995
-  const max = Math.max(...points) * 1.005
-  const range = max - min || 1
+  let coords
+  if (hasNoActivity) {
+    // Perfectly centered flat horizontal line
+    const yCenter = height / 2
+    coords = points.map((val, idx) => {
+      const x = padding + (idx / (points.length - 1)) * (width - 2 * padding)
+      return { x, y: yCenter }
+    })
+  } else {
+    const min = Math.min(...points, initialCapital)
+    const max = Math.max(...points, initialCapital)
+    const range = max - min || 1
 
-  const coords = points.map((val, idx) => {
-    const x = padding + (idx / (points.length - 1)) * (width - 2 * padding)
-    const y = height - padding - ((val - min) / range) * (height - 2 * padding)
-    return { x, y }
-  })
+    coords = points.map((val, idx) => {
+      const x = padding + (idx / (points.length - 1)) * (width - 2 * padding)
+      const y = height - padding - ((val - min) / range) * (height - 2 * padding)
+      return { x, y }
+    })
+  }
 
   const polylineStr = coords.map(c => `${c.x},${c.y}`).join(' ')
-  const isPositive = diff >= 0
+  const isNeutral = hasNoActivity
+  const isPositive = diff > 0
+  const lineColor = isNeutral ? '#71717a' : isPositive ? '#10b981' : '#f43f5e'
   const lastPoint = coords[coords.length - 1]
 
   return (
@@ -44,7 +61,7 @@ function TeamSparkline({ netWorth, initialCapital = 10000000, seed = 1 }) {
         <polyline
           points={polylineStr}
           fill="none"
-          stroke={isPositive ? '#10b981' : '#f43f5e'}
+          stroke={lineColor}
           strokeWidth="1.75"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -65,7 +82,7 @@ function TeamSparkline({ netWorth, initialCapital = 10000000, seed = 1 }) {
             cx={lastPoint.x}
             cy={lastPoint.y}
             r="3.5"
-            fill={isPositive ? '#10b981' : '#f43f5e'}
+            fill={lineColor}
             stroke="#09090b"
             strokeWidth="1.5"
           />
@@ -149,7 +166,7 @@ export default function Ranking() {
                 </div>
 
                 {/* Performance Sparkline */}
-                <TeamSparkline netWorth={top2.net_worth} seed={2} />
+                <TeamSparkline netWorth={top2.net_worth} />
 
                 <div className="pt-2 border-t border-zinc-800 text-[11px] font-mono-nums flex justify-between">
                   <span className="text-zinc-500">Rentabilidade:</span>
@@ -175,7 +192,7 @@ export default function Ranking() {
                 </div>
 
                 {/* Performance Sparkline */}
-                <TeamSparkline netWorth={top1.net_worth} seed={1} />
+                <TeamSparkline netWorth={top1.net_worth} />
 
                 <div className="pt-2 border-t border-zinc-700 text-[11px] font-mono-nums flex justify-between">
                   <span className="text-zinc-400">Rentabilidade:</span>
@@ -201,7 +218,7 @@ export default function Ranking() {
                 </div>
 
                 {/* Performance Sparkline */}
-                <TeamSparkline netWorth={top3.net_worth} seed={3} />
+                <TeamSparkline netWorth={top3.net_worth} />
 
                 <div className="pt-2 border-t border-zinc-800 text-[11px] font-mono-nums flex justify-between">
                   <span className="text-zinc-500">Rentabilidade:</span>
