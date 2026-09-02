@@ -13,58 +13,127 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 async function fetchQuote(symbol) {
   const yahooSymbol = `${symbol}.SA`
-  const url1m = `https://query1.finance.yahoo.com/v8/finance/chart/${yahooSymbol}?range=1mo&interval=1d`
-  
+  const headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+  }
+
   try {
-    const response = await fetch(url1m, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-      }
-    })
+    // 1. Fetch 1M daily series
+    const url1m = `https://query1.finance.yahoo.com/v8/finance/chart/${yahooSymbol}?range=1mo&interval=1d`
+    const res1m = await fetch(url1m, { headers })
     
-    if (response.status === 404) {
+    if (res1m.status === 404) {
       console.warn(`Aviso: Ativo ${symbol} retornou 404. Deletando do banco...`)
       await supabase.from('assets').delete().eq('symbol', symbol)
       return null
     }
 
-    if (!response.ok) {
-      console.warn(`Aviso: Falha temporária ao obter cotação de ${symbol} (Status ${response.status})`)
+    if (!res1m.ok) {
+      console.warn(`Aviso: Falha ao obter cotação de ${symbol} (Status ${res1m.status})`)
       return null
     }
-    
-    const data = await response.json()
-    const result = data.chart?.result?.[0]
-    const meta = result?.meta
-    const timestamps = result?.timestamp || []
-    const quote = result?.indicators?.quote?.[0]
-    
+
+    const data1m = await res1m.json()
+    const result1m = data1m.chart?.result?.[0]
+    const meta = result1m?.meta
+    const timestamps1m = result1m?.timestamp || []
+    const quote1m = result1m?.indicators?.quote?.[0]
     const lastPrice = meta?.regularMarketPrice || null
-    
-    // Process 1M real historical points
+
     const points1m = []
-    if (timestamps.length > 0 && quote?.close) {
-      for (let i = 0; i < timestamps.length; i++) {
-        const c = quote.close[i]
+    if (timestamps1m.length > 0 && quote1m?.close) {
+      for (let i = 0; i < timestamps1m.length; i++) {
+        const c = quote1m.close[i]
         if (c !== null && typeof c === 'number' && !isNaN(c) && c > 0) {
-          const d = new Date(timestamps[i] * 1000)
+          const d = new Date(timestamps1m[i] * 1000)
           const day = String(d.getDate()).padStart(2, '0')
           const month = String(d.getMonth() + 1).padStart(2, '0')
           points1m.push({
             price: parseFloat(c.toFixed(2)),
-            open: quote.open?.[i] ? parseFloat(quote.open[i].toFixed(2)) : parseFloat(c.toFixed(2)),
-            high: quote.high?.[i] ? parseFloat(quote.high[i].toFixed(2)) : parseFloat(c.toFixed(2)),
-            low: quote.low?.[i] ? parseFloat(quote.low[i].toFixed(2)) : parseFloat(c.toFixed(2)),
+            open: quote1m.open?.[i] ? parseFloat(quote1m.open[i].toFixed(2)) : parseFloat(c.toFixed(2)),
+            high: quote1m.high?.[i] ? parseFloat(quote1m.high[i].toFixed(2)) : parseFloat(c.toFixed(2)),
+            low: quote1m.low?.[i] ? parseFloat(quote1m.low[i].toFixed(2)) : parseFloat(c.toFixed(2)),
             label: `${day}/${month}`
           })
         }
       }
     }
 
-    // Process 1W (last 6 daily points)
-    const points1w = points1m.slice(-6)
+    // 2. Fetch 1D real intraday 15-minute series
+    let points1d = []
+    try {
+      const url1d = `https://query1.finance.yahoo.com/v8/finance/chart/${yahooSymbol}?range=1d&interval=15m`
+      const res1d = await fetch(url1d, { headers })
+      if (res1d.ok) {
+        const data1d = await res1d.json()
+        const result1d = data1d.chart?.result?.[0]
+        const timestamps1d = result1d?.timestamp || []
+        const quote1d = result1d?.indicators?.quote?.[0]
 
-    // Process open price
+        if (timestamps1d.length > 0 && quote1d?.close) {
+          for (let i = 0; i < timestamps1d.length; i++) {
+            const c = quote1d.close[i]
+            if (c !== null && typeof c === 'number' && !isNaN(c) && c > 0) {
+              const d = new Date(timestamps1d[i] * 1000)
+              const hours = String(d.getHours()).padStart(2, '0')
+              const mins = String(d.getMinutes()).padStart(2, '0')
+              points1d.push({
+                price: parseFloat(c.toFixed(2)),
+                open: quote1d.open?.[i] ? parseFloat(quote1d.open[i].toFixed(2)) : parseFloat(c.toFixed(2)),
+                high: quote1d.high?.[i] ? parseFloat(quote1d.high[i].toFixed(2)) : parseFloat(c.toFixed(2)),
+                low: quote1d.low?.[i] ? parseFloat(quote1d.low[i].toFixed(2)) : parseFloat(c.toFixed(2)),
+                label: `${hours}:${mins}`
+              })
+            }
+          }
+        }
+      }
+    } catch {
+      // Ignore intraday failure
+    }
+
+    // 3. Fetch 1W real 5-day hourly series
+    let points1w = []
+    try {
+      const url1w = `https://query1.finance.yahoo.com/v8/finance/chart/${yahooSymbol}?range=5d&interval=60m`
+      const res1w = await fetch(url1w, { headers })
+      if (res1w.ok) {
+        const data1w = await res1w.json()
+        const result1w = data1w.chart?.result?.[0]
+        const timestamps1w = result1w?.timestamp || []
+        const quote1w = result1w?.indicators?.quote?.[0]
+
+        if (timestamps1w.length > 0 && quote1w?.close) {
+          for (let i = 0; i < timestamps1w.length; i++) {
+            const c = quote1w.close[i]
+            if (c !== null && typeof c === 'number' && !isNaN(c) && c > 0) {
+              const d = new Date(timestamps1w[i] * 1000)
+              const day = String(d.getDate()).padStart(2, '0')
+              const month = String(d.getMonth() + 1).padStart(2, '0')
+              const hours = String(d.getHours()).padStart(2, '0')
+              points1w.push({
+                price: parseFloat(c.toFixed(2)),
+                open: quote1w.open?.[i] ? parseFloat(quote1w.open[i].toFixed(2)) : parseFloat(c.toFixed(2)),
+                high: quote1w.high?.[i] ? parseFloat(quote1w.high[i].toFixed(2)) : parseFloat(c.toFixed(2)),
+                low: quote1w.low?.[i] ? parseFloat(quote1w.low[i].toFixed(2)) : parseFloat(c.toFixed(2)),
+                label: `${day}/${month} ${hours}h`
+              })
+            }
+          }
+        }
+      }
+    } catch {
+      // Fallback
+    }
+
+    // Fallbacks if 1D or 1W were empty (e.g. market holiday)
+    if (points1w.length === 0) {
+      points1w = points1m.slice(-6)
+    }
+    if (points1d.length === 0) {
+      points1d = points1w.slice(-5)
+    }
+
     let openPrice = lastPrice
     if (points1m.length > 0) {
       openPrice = points1m[points1m.length - 1].open || lastPrice
@@ -77,7 +146,7 @@ async function fetchQuote(symbol) {
       chartData: {
         '1m': points1m,
         '1w': points1w,
-        '1d': points1w.slice(-2)
+        '1d': points1d
       }
     }
   } catch (e) {
@@ -271,9 +340,9 @@ async function updatePrices() {
     process.exit(0)
   }
 
-  console.log(`Encontrados ${assets.length} ativos. Iniciando cotações diárias e séries históricas...`)
+  console.log(`Encontrados ${assets.length} ativos. Baixando cotações e séries intraday (1D), 1S e 1M...`)
 
-  const chunkSize = 10
+  const chunkSize = 6
   const results = []
   const priceMap = {}
 
@@ -287,10 +356,10 @@ async function updatePrices() {
       priceMap[res.symbol] = res
     }
     
-    await new Promise(resolve => setTimeout(resolve, 250))
+    await new Promise(resolve => setTimeout(resolve, 300))
   }
 
-  console.log(`Cotações e séries obtidas: ${results.length} de ${assets.length}. Atualizando banco de dados...`)
+  console.log(`Cotações e séries obtidas: ${results.length} de ${assets.length}. Gravando no banco de dados...`)
 
   for (const quote of results) {
     if (quote.price) {
@@ -299,7 +368,6 @@ async function updatePrices() {
         updated_at: new Date().toISOString()
       }
       
-      // If chartData exists, attempt to update
       if (quote.chartData) {
         updatePayload.chart_data = quote.chartData
       }
@@ -310,7 +378,6 @@ async function updatePrices() {
         .eq('symbol', quote.symbol)
 
       if (updateError) {
-        // Fallback without chart_data if column not yet created
         await supabase
           .from('assets')
           .update({ last_price: quote.price, updated_at: new Date().toISOString() })
@@ -321,7 +388,7 @@ async function updatePrices() {
 
   await executePendingOrders(priceMap)
 
-  console.log('Ciclo diário concluído com sucesso.')
+  console.log('Atualização diária de séries históricas concluída.')
   process.exit(0)
 }
 
