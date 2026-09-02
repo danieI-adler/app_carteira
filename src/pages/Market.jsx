@@ -9,10 +9,12 @@ import {
   ChevronDown, 
   ChevronUp, 
   Search, 
-  Plus,
-  Clock,
-  LayoutGrid,
-  Table as TableIcon
+  Plus, 
+  Clock, 
+  LayoutGrid, 
+  Table as TableIcon,
+  CheckSquare,
+  Square
 } from 'lucide-react'
 
 export default function Market() {
@@ -23,8 +25,9 @@ export default function Market() {
   const [categoryFilter, setCategoryFilter] = useState('all') // all, acao, fii, etf
   const [isQuotesOpen, setIsQuotesOpen] = useState(true)
   const [selectedAssetSymbol, setSelectedAssetSymbol] = useState('')
-  const [viewMode, setViewMode] = useState('charts') // 'charts' or 'table'
+  const [viewMode, setViewMode] = useState('table') // 'table' (DEFAULT) or 'charts' (SECOND OPTION)
   const [timeframe, setTimeframe] = useState('1w') // '1d', '1w', '1m'
+  const [selectedSymbolsForCharts, setSelectedSymbolsForCharts] = useState([])
 
   const marketStatus = getMarketStatus()
 
@@ -56,12 +59,33 @@ export default function Market() {
     }).format(val || 0)
   }
 
+  const toggleSelectForChart = (symbol, e) => {
+    e.stopPropagation()
+    setSelectedSymbolsForCharts(prev => 
+      prev.includes(symbol) ? prev.filter(s => s !== symbol) : [...prev, symbol]
+    )
+  }
+
+  const selectAllFiltered = () => {
+    const allFilteredSymbols = filteredAssets.map(a => a.symbol)
+    setSelectedSymbolsForCharts(allFilteredSymbols)
+  }
+
+  const clearSelected = () => {
+    setSelectedSymbolsForCharts([])
+  }
+
   const filteredAssets = assets.filter((asset) => {
     const matchesSearch = asset.symbol.toLowerCase().includes(filterQuery.toLowerCase()) ||
       asset.name.toLowerCase().includes(filterQuery.toLowerCase())
     const matchesCategory = categoryFilter === 'all' || asset.type?.toLowerCase() === categoryFilter
     return matchesSearch && matchesCategory
   })
+
+  // In chart view, if user selected specific symbols, show those or fallback to filtered
+  const chartAssets = selectedSymbolsForCharts.length > 0
+    ? assets.filter(a => selectedSymbolsForCharts.includes(a.symbol))
+    : filteredAssets
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
@@ -121,28 +145,30 @@ export default function Market() {
                 </span>
               </button>
 
-              {/* View Mode Switcher (Charts vs Table) */}
+              {/* View Mode Switcher (DEFAULT: Table / Lista, SECOND: Charts / Gráficos) */}
               {isQuotesOpen && (
                 <div className="flex items-center bg-[#0c0c0e] border border-zinc-800 rounded p-0.5">
                   <button
                     type="button"
-                    onClick={() => setViewMode('charts')}
-                    className={`p-1 rounded text-xs transition-colors cursor-pointer ${
-                      viewMode === 'charts' ? 'bg-zinc-800 text-zinc-100 font-medium' : 'text-zinc-500 hover:text-zinc-300'
+                    onClick={() => setViewMode('table')}
+                    className={`flex items-center gap-1.5 px-2 py-1 rounded text-xs transition-colors cursor-pointer ${
+                      viewMode === 'table' ? 'bg-zinc-800 text-zinc-100 font-semibold shadow-sm' : 'text-zinc-500 hover:text-zinc-300'
                     }`}
-                    title="Visualização em Gráficos"
+                    title="Visualização em Lista / Tabela (Padrão)"
                   >
-                    <LayoutGrid size={14} />
+                    <TableIcon size={13} />
+                    <span className="hidden sm:inline text-[11px]">Lista</span>
                   </button>
                   <button
                     type="button"
-                    onClick={() => setViewMode('table')}
-                    className={`p-1 rounded text-xs transition-colors cursor-pointer ${
-                      viewMode === 'table' ? 'bg-zinc-800 text-zinc-100 font-medium' : 'text-zinc-500 hover:text-zinc-300'
+                    onClick={() => setViewMode('charts')}
+                    className={`flex items-center gap-1.5 px-2 py-1 rounded text-xs transition-colors cursor-pointer ${
+                      viewMode === 'charts' ? 'bg-zinc-800 text-zinc-100 font-semibold shadow-sm' : 'text-zinc-500 hover:text-zinc-300'
                     }`}
-                    title="Visualização em Tabela"
+                    title="Visualização em Gráficos"
                   >
-                    <TableIcon size={14} />
+                    <LayoutGrid size={13} />
+                    <span className="hidden sm:inline text-[11px]">Gráficos</span>
                   </button>
                 </div>
               )}
@@ -188,46 +214,130 @@ export default function Market() {
                 ))}
               </div>
 
-              {/* Timeframe selector (1D, 1S, 1M) for chart view */}
-              {viewMode === 'charts' && (
-                <div className="flex items-center gap-1 bg-zinc-900 border border-zinc-800 rounded p-0.5">
-                  <button
-                    onClick={() => setTimeframe('1d')}
-                    className={`px-2 py-0.5 rounded text-[10px] font-mono-nums font-semibold transition-colors cursor-pointer ${
-                      timeframe === '1d' ? 'bg-zinc-800 text-zinc-100 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'
-                    }`}
-                  >
-                    1D
-                  </button>
-                  <button
-                    onClick={() => setTimeframe('1w')}
-                    className={`px-2 py-0.5 rounded text-[10px] font-mono-nums font-semibold transition-colors cursor-pointer ${
-                      timeframe === '1w' ? 'bg-zinc-800 text-zinc-100 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'
-                    }`}
-                  >
-                    1S
-                  </button>
-                  <button
-                    onClick={() => setTimeframe('1m')}
-                    className={`px-2 py-0.5 rounded text-[10px] font-mono-nums font-semibold transition-colors cursor-pointer ${
-                      timeframe === '1m' ? 'bg-zinc-800 text-zinc-100 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'
-                    }`}
-                  >
-                    1M
-                  </button>
-                </div>
-              )}
+              {/* Selection Controls & Timeframe Selector */}
+              <div className="flex items-center gap-2">
+                {viewMode === 'charts' && (
+                  <>
+                    {selectedSymbolsForCharts.length > 0 && (
+                      <button
+                        onClick={clearSelected}
+                        className="text-[10px] text-zinc-400 hover:text-zinc-200 underline cursor-pointer"
+                      >
+                        Ver todos ({chartAssets.length})
+                      </button>
+                    )}
+
+                    {/* Timeframe selector (1D, 1S, 1M) for chart view */}
+                    <div className="flex items-center gap-1 bg-zinc-900 border border-zinc-800 rounded p-0.5">
+                      <button
+                        onClick={() => setTimeframe('1d')}
+                        className={`px-2 py-0.5 rounded text-[10px] font-mono-nums font-semibold transition-colors cursor-pointer ${
+                          timeframe === '1d' ? 'bg-zinc-800 text-zinc-100 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'
+                        }`}
+                      >
+                        1D
+                      </button>
+                      <button
+                        onClick={() => setTimeframe('1w')}
+                        className={`px-2 py-0.5 rounded text-[10px] font-mono-nums font-semibold transition-colors cursor-pointer ${
+                          timeframe === '1w' ? 'bg-zinc-800 text-zinc-100 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'
+                        }`}
+                      >
+                        1S
+                      </button>
+                      <button
+                        onClick={() => setTimeframe('1m')}
+                        className={`px-2 py-0.5 rounded text-[10px] font-mono-nums font-semibold transition-colors cursor-pointer ${
+                          timeframe === '1m' ? 'bg-zinc-800 text-zinc-100 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'
+                        }`}
+                      >
+                        1M
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           )}
 
-          {/* Body: Charts Grid or Table */}
+          {/* Body: Table (DEFAULT) or Charts Grid */}
           {isQuotesOpen && (
             assetsLoading ? (
               <div className="text-center py-12 text-zinc-500 text-xs">Carregando cotações...</div>
-            ) : viewMode === 'charts' ? (
-              /* GRID DE GRÁFICOS (Inspirado no modelo de referência) */
+            ) : viewMode === 'table' ? (
+              /* VISUALIZAÇÃO PADRÃO: TABELA DE COTAÇÕES */
+              <div className="overflow-x-auto max-h-[480px] overflow-y-auto">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="border-b border-zinc-800 text-zinc-400 bg-[#0c0c0e] sticky top-0 z-10">
+                      <th className="py-2.5 px-3 w-8 text-center">
+                        <button
+                          onClick={selectAllFiltered}
+                          title="Selecionar todos para ver em gráfico"
+                          className="text-zinc-500 hover:text-zinc-300 cursor-pointer"
+                        >
+                          <Square size={13} />
+                        </button>
+                      </th>
+                      <th className="py-2.5 px-4 font-medium min-w-[80px]">Sigla</th>
+                      <th className="py-2.5 px-4 font-medium">Nome do Ativo</th>
+                      <th className="py-2.5 px-4 font-medium">Classe</th>
+                      <th className="py-2.5 px-4 text-right font-medium min-w-[100px]">Cotação Oficial</th>
+                      <th className="py-2.5 px-4 text-right font-medium">Negociar</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-850">
+                    {filteredAssets.map((asset) => {
+                      const isSelectedForChart = selectedSymbolsForCharts.includes(asset.symbol)
+                      return (
+                        <tr 
+                          key={asset.symbol} 
+                          className="table-row-hover font-mono-nums cursor-pointer"
+                          onClick={() => setSelectedAssetSymbol(asset.symbol)}
+                        >
+                          <td className="py-2.5 px-3 text-center">
+                            <button
+                              type="button"
+                              onClick={(e) => toggleSelectForChart(asset.symbol, e)}
+                              className="text-zinc-500 hover:text-zinc-200 cursor-pointer"
+                              title="Marcar para exibir em gráfico"
+                            >
+                              {isSelectedForChart ? (
+                                <CheckSquare size={14} className="text-emerald-400" />
+                              ) : (
+                                <Square size={14} />
+                              )}
+                            </button>
+                          </td>
+                          <td className="py-2.5 px-4 font-semibold text-zinc-100">{asset.symbol}</td>
+                          <td className="py-2.5 px-4 text-zinc-300 font-sans max-w-[200px] truncate">{asset.name}</td>
+                          <td className="py-2.5 px-4 uppercase text-[11px] text-zinc-400 font-sans">{asset.type}</td>
+                          <td className="py-2.5 px-4 text-right text-zinc-100 font-semibold whitespace-nowrap">
+                            {formatBRL(asset.last_price)}
+                          </td>
+                          <td className="py-2.5 px-4 text-right">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setSelectedAssetSymbol(asset.symbol)
+                              }}
+                              className="p-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-zinc-100 transition-colors"
+                              title={`Selecionar ${asset.symbol}`}
+                            >
+                              <Plus size={13} />
+                            </button>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              /* SEGUNDA OPÇÃO: GRID DE GRÁFICOS */
               <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[560px] overflow-y-auto">
-                {filteredAssets.map((asset) => (
+                {chartAssets.map((asset) => (
                   <AssetChartCard
                     key={asset.symbol}
                     asset={asset}
@@ -235,50 +345,6 @@ export default function Market() {
                     onSelect={(symbol) => setSelectedAssetSymbol(symbol)}
                   />
                 ))}
-              </div>
-            ) : (
-              /* TABELA DE COTAÇÕES */
-              <div className="overflow-x-auto max-h-[460px] overflow-y-auto">
-                <table className="w-full text-left border-collapse text-xs">
-                  <thead>
-                    <tr className="border-b border-zinc-800 text-zinc-400 bg-[#0c0c0e] sticky top-0 z-10">
-                      <th className="py-2.5 px-4 font-medium min-w-[80px]">Sigla</th>
-                      <th className="py-2.5 px-4 font-medium">Nome do Ativo</th>
-                      <th className="py-2.5 px-4 font-medium">Classe</th>
-                      <th className="py-2.5 px-4 text-right font-medium min-w-[100px]">Cotação Oficial</th>
-                      <th className="py-2.5 px-4 text-right font-medium">Ação</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-zinc-850">
-                    {filteredAssets.map((asset) => (
-                      <tr 
-                        key={asset.symbol} 
-                        className="table-row-hover font-mono-nums cursor-pointer"
-                        onClick={() => setSelectedAssetSymbol(asset.symbol)}
-                      >
-                        <td className="py-2.5 px-4 font-semibold text-zinc-100">{asset.symbol}</td>
-                        <td className="py-2.5 px-4 text-zinc-300 font-sans max-w-[200px] truncate">{asset.name}</td>
-                        <td className="py-2.5 px-4 uppercase text-[11px] text-zinc-400 font-sans">{asset.type}</td>
-                        <td className="py-2.5 px-4 text-right text-zinc-100 font-semibold whitespace-nowrap">
-                          {formatBRL(asset.last_price)}
-                        </td>
-                        <td className="py-2.5 px-4 text-right">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              setSelectedAssetSymbol(asset.symbol)
-                            }}
-                            className="p-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-zinc-100 transition-colors"
-                            title={`Selecionar ${asset.symbol}`}
-                          >
-                            <Plus size={13} />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
               </div>
             )
           )}

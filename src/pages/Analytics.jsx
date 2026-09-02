@@ -1,9 +1,11 @@
-import { useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import usePortfolio from '../hooks/usePortfolio'
 import PieChart from '../components/ui/PieChart'
+import { PieChart as PieIcon, BarChart2 } from 'lucide-react'
 
 export default function Analytics() {
   const { team, positions, loading, error } = usePortfolio()
+  const [allocationViewMode, setAllocationViewMode] = useState('pie') // 'pie' or 'bars'
 
   const formatBRL = (val) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -134,15 +136,77 @@ export default function Analytics() {
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
-        {/* Allocation */}
+        {/* Allocation with View Mode Toggle (Pizza vs Barras) */}
         <div className="surface-card p-5 space-y-5">
           <div className="flex justify-between items-center border-b border-zinc-800 pb-3">
-            <h2 className="text-sm font-semibold text-zinc-100">Alocação por Classe de Ativos</h2>
-            <span className="text-xs font-mono-nums text-zinc-500">{positions.length} ativos</span>
+            <div>
+              <h2 className="text-sm font-semibold text-zinc-100">Alocação por Classe de Ativos</h2>
+              <span className="text-xs font-mono-nums text-zinc-500">{positions.length} ativos em custódia</span>
+            </div>
+
+            {/* Toggle de Visualização (Pizza / Donut vs Barra / Lista) */}
+            <div className="flex items-center bg-[#0c0c0e] border border-zinc-800 rounded p-0.5">
+              <button
+                type="button"
+                onClick={() => setAllocationViewMode('pie')}
+                className={`p-1.5 rounded text-xs transition-colors cursor-pointer ${
+                  allocationViewMode === 'pie'
+                    ? 'bg-zinc-800 text-zinc-100 font-semibold shadow-sm'
+                    : 'text-zinc-500 hover:text-zinc-300'
+                }`}
+                title="Visualizar em Gráfico de Pizza"
+              >
+                <PieIcon size={14} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setAllocationViewMode('bars')}
+                className={`p-1.5 rounded text-xs transition-colors cursor-pointer ${
+                  allocationViewMode === 'bars'
+                    ? 'bg-zinc-800 text-zinc-100 font-semibold shadow-sm'
+                    : 'text-zinc-500 hover:text-zinc-300'
+                }`}
+                title="Visualizar em Barra / Lista"
+              >
+                <BarChart2 size={14} />
+              </button>
+            </div>
           </div>
 
-          {/* Gráfico de Pizza / Donut */}
-          <PieChart data={Object.values(allocation)} totalValue={netWorth} />
+          {/* Renderização Condicional */}
+          {allocationViewMode === 'pie' ? (
+            /* Visualização 1: Gráfico de Pizza / Donut */
+            <PieChart data={Object.values(allocation)} totalValue={netWorth} />
+          ) : (
+            /* Visualização 2: Barra Segmentada + Lista */
+            <div className="space-y-4 pt-1">
+              <div className="w-full h-3.5 rounded bg-zinc-900 border border-zinc-800 overflow-hidden flex">
+                {Object.values(allocation).map((item, idx) => (
+                  <div 
+                    key={idx} 
+                    style={{ width: `${item.percent}%`, backgroundColor: item.color }} 
+                    className="h-full transition-all duration-300"
+                    title={`${item.label}: ${item.percent.toFixed(1)}%`}
+                  />
+                ))}
+              </div>
+
+              <div className="space-y-2">
+                {Object.values(allocation).map((item, idx) => (
+                  <div key={idx} className="flex items-center justify-between p-2.5 bg-[#0c0c0e] border border-zinc-800/80 rounded">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: item.color }} />
+                      <div>
+                        <span className="text-xs font-medium text-zinc-200 block">{item.label}</span>
+                        <span className="text-[11px] font-mono-nums text-zinc-500">{formatBRL(item.value)}</span>
+                      </div>
+                    </div>
+                    <span className="font-mono-nums text-xs font-semibold text-zinc-100">{item.percent.toFixed(1)}%</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Wealth Evolution */}
