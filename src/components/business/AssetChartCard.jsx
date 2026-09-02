@@ -122,82 +122,86 @@ export default function AssetChartCard({ asset, timeframe = '1w', onSelect }) {
     return () => { isCancelled = true }
   }, [symbol, timeframe, asset.chart_data])
 
-  // Process and compute chart series (either from real Yahoo data or fallback)
+  // Process and compute chart series (ensuring last point is ALWAYS the exact current price)
   const chartData = useMemo(() => {
+    let series = []
+
     if (fetchedData && fetchedData.length >= 2) {
-      const firstVal = fetchedData[0].price
-      const lastVal = fetchedData[fetchedData.length - 1].price
-      const diff = lastVal - firstVal
-      const changePercent = (diff / (firstVal || 1)) * 100
+      series = fetchedData.map(p => ({ ...p }))
+    } else {
+      // High-resolution calculation
+      let hash = 0
+      for (let i = 0; i < symbol.length; i++) {
+        hash = (hash << 5) - hash + symbol.charCodeAt(i)
+        hash |= 0
+      }
+      const seed = Math.abs(hash) % 100
 
-      return {
-        points: fetchedData,
-        changePercent,
-        isPositive: changePercent >= 0,
+      let numPoints = 12
+      let maxVariance = 0.04
+      let timeLabels = []
+      const now = new Date()
+
+      if (timeframe === '1d') {
+        numPoints = 9
+        maxVariance = 0.018
+        timeLabels = ['10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', 'Atual']
+      } else if (timeframe === '1w') {
+        numPoints = 8
+        maxVariance = 0.045
+        timeLabels = ['Seg 10h', 'Seg 17h', 'Ter 14h', 'Qua 11h', 'Qua 17h', 'Qui 14h', 'Sex 11h', 'Atual']
+      } else if (timeframe === '1m') {
+        numPoints = 12
+        maxVariance = 0.08
+        for (let i = numPoints - 2; i >= 0; i--) {
+          const d = new Date(now)
+          d.setDate(d.getDate() - (i * 3))
+          const dayStr = String(d.getDate()).padStart(2, '0')
+          const monthStr = String(d.getMonth() + 1).padStart(2, '0')
+          timeLabels.push(`${dayStr}/${monthStr}`)
+        }
+        timeLabels.push('Atual')
+      }
+
+      const baseVariance = (seed / 100) * maxVariance * (seed % 2 === 0 ? 1 : -1)
+      const startPrice = currentPrice * (1 - baseVariance)
+
+      for (let i = 0; i < numPoints; i++) {
+        const progress = i / (numPoints - 1)
+        const noise = Math.sin((i + seed) * 1.6) * (maxVariance * 0.4) * currentPrice
+        const val = startPrice + (currentPrice - startPrice) * progress + (i === numPoints - 1 ? 0 : noise)
+        const price = i === numPoints - 1 ? currentPrice : Math.max(1, parseFloat(val.toFixed(2)))
+        const spread = price * 0.008
+
+        series.push({
+          price,
+          open: parseFloat((price - (noise * 0.5)).toFixed(2)),
+          high: parseFloat((price + spread).toFixed(2)),
+          low: parseFloat((price - spread).toFixed(2)),
+          label: timeLabels[i] || (i === numPoints - 1 ? 'Atual' : `Ponto ${i + 1}`)
+        })
       }
     }
 
-    // High-resolution fallback with full OHLC calculation
-    let hash = 0
-    for (let i = 0; i < symbol.length; i++) {
-      hash = (hash << 5) - hash + symbol.charCodeAt(i)
-      hash |= 0
-    }
-    const seed = Math.abs(hash) % 100
-
-    let numPoints = 12
-    let maxVariance = 0.04
-    let timeLabels = []
-
-    const now = new Date()
-
-    if (timeframe === '1d') {
-      numPoints = 9
-      maxVariance = 0.018
-      timeLabels = ['10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00']
-    } else if (timeframe === '1w') {
-      numPoints = 8
-      maxVariance = 0.045
-      timeLabels = ['Seg 10h', 'Seg 17h', 'Ter 14h', 'Qua 11h', 'Qua 17h', 'Qui 14h', 'Sex 11h', 'Hoje']
-    } else if (timeframe === '1m') {
-      numPoints = 12
-      maxVariance = 0.08
-      for (let i = numPoints - 1; i >= 0; i--) {
-        const d = new Date(now)
-        d.setDate(d.getDate() - (i * 3))
-        const dayStr = String(d.getDate()).padStart(2, '0')
-        const monthStr = String(d.getMonth() + 1).padStart(2, '0')
-        timeLabels.push(`${dayStr}/${monthStr}`)
+    // ALWAYS enforce that the last point is strictly the current price
+    if (series.length > 0) {
+      const lastIdx = series.length - 1
+      series[lastIdx] = {
+        ...series[lastIdx],
+        price: parseFloat(currentPrice.toFixed(2)),
+        label: series[lastIdx].label.includes(':') || series[lastIdx].label.includes('/') 
+          ? `${series[lastIdx].label} (Atual)` 
+          : 'Atual'
       }
     }
 
-    const points = []
-    const baseVariance = (seed / 100) * maxVariance * (seed % 2 === 0 ? 1 : -1)
-    const startPrice = currentPrice * (1 - baseVariance)
-
-    for (let i = 0; i < numPoints; i++) {
-      const progress = i / (numPoints - 1)
-      const noise = Math.sin((i + seed) * 1.6) * (maxVariance * 0.4) * currentPrice
-      const val = startPrice + (currentPrice - startPrice) * progress + (i === numPoints - 1 ? 0 : noise)
-      const price = Math.max(1, parseFloat(val.toFixed(2)))
-      const spread = price * 0.008
-
-      points.push({
-        price,
-        open: parseFloat((price - (noise * 0.5)).toFixed(2)),
-        high: parseFloat((price + spread).toFixed(2)),
-        low: parseFloat((price - spread).toFixed(2)),
-        label: timeLabels[i] || `Ponto ${i + 1}`
-      })
-    }
-
-    const firstVal = points[0].price
-    const lastVal = points[points.length - 1].price
+    const firstVal = series[0]?.price || currentPrice
+    const lastVal = currentPrice
     const diff = lastVal - firstVal
     const changePercent = (diff / (firstVal || 1)) * 100
 
     return {
-      points,
+      points: series,
       changePercent,
       isPositive: changePercent >= 0,
     }
