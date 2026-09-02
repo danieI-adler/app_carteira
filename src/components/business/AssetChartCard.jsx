@@ -109,7 +109,7 @@ export default function AssetChartCard({ asset, timeframe = '1w', onSelect }) {
           }
         }
       } catch {
-        // Fallback to synthesized data
+        // Fallback
       }
 
       if (!isCancelled) {
@@ -122,7 +122,7 @@ export default function AssetChartCard({ asset, timeframe = '1w', onSelect }) {
     return () => { isCancelled = true }
   }, [symbol, timeframe, asset.chart_data])
 
-  // Process and compute chart series (ensuring last point is ALWAYS the exact current price)
+  // Process and compute chart series (ensuring last point is strictly current price)
   const chartData = useMemo(() => {
     let series = []
 
@@ -189,6 +189,8 @@ export default function AssetChartCard({ asset, timeframe = '1w', onSelect }) {
       series[lastIdx] = {
         ...series[lastIdx],
         price: parseFloat(currentPrice.toFixed(2)),
+        high: Math.max(series[lastIdx].high || currentPrice, currentPrice),
+        low: Math.min(series[lastIdx].low || currentPrice, currentPrice),
         label: 'Atual',
       }
     }
@@ -394,7 +396,7 @@ export default function AssetChartCard({ asset, timeframe = '1w', onSelect }) {
                 fontSize="8"
                 fontWeight="600"
               >
-                {activeHover.label}
+                {hoveredIndex === svgCoordinates.length - 1 ? 'Cotação Atual' : activeHover.label}
               </text>
               <text
                 x="48"
@@ -415,7 +417,9 @@ export default function AssetChartCard({ asset, timeframe = '1w', onSelect }) {
                 fontSize="6.5"
                 fontFamily="ui-monospace, SFMono-Regular, monospace"
               >
-                MÁX: {activeHover.high.toFixed(2)} | MÍN: {activeHover.low.toFixed(2)}
+                {hoveredIndex === svgCoordinates.length - 1
+                  ? 'ÚLTIMO PREÇO B3'
+                  : `MÁX: ${activeHover.high.toFixed(2)} | MÍN: ${activeHover.low.toFixed(2)}`}
               </text>
             </g>
           )}
