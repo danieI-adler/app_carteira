@@ -20,10 +20,15 @@ export default function AssetChartCard({ asset, timeframe = '1w', onSelect }) {
   const currentPrice = asset.last_price || 30.00
   const symbol = asset.symbol
 
-  // Fetch real historical OHLC data from Yahoo Finance API with caching
+  // Fetch real historical OHLC data with preference for server-synced chart_data
   useEffect(() => {
     let isCancelled = false
     const cacheKey = `${symbol}_${timeframe}`
+
+    if (asset.chart_data && asset.chart_data[timeframe] && asset.chart_data[timeframe].length >= 2) {
+      setFetchedData(asset.chart_data[timeframe])
+      return
+    }
 
     if (chartCache.has(cacheKey)) {
       setFetchedData(chartCache.get(cacheKey))
@@ -115,7 +120,7 @@ export default function AssetChartCard({ asset, timeframe = '1w', onSelect }) {
 
     fetchChart()
     return () => { isCancelled = true }
-  }, [symbol, timeframe])
+  }, [symbol, timeframe, asset.chart_data])
 
   // Process and compute chart series (either from real Yahoo data or fallback)
   const chartData = useMemo(() => {

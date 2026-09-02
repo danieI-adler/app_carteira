@@ -36,6 +36,7 @@ CREATE TABLE IF NOT EXISTS public.assets (
     name TEXT NOT NULL,
     type TEXT NOT NULL CHECK (type IN ('acao', 'fii', 'etf')),
     last_price NUMERIC(12, 2) NOT NULL,
+    chart_data JSONB,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
