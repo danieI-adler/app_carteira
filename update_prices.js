@@ -43,17 +43,22 @@ async function fetchQuote(symbol) {
     const points1m = []
     if (timestamps1m.length > 0 && quote1m?.close) {
       for (let i = 0; i < timestamps1m.length; i++) {
-        const c = quote1m.close[i]
+        let c = quote1m.close[i]
+        // If the latest point is null, use the regularMarketPrice (currentPrice)
+        if ((c === null || typeof c !== 'number' || isNaN(c)) && i === timestamps1m.length - 1 && lastPrice) {
+          c = lastPrice
+        }
         if (c !== null && typeof c === 'number' && !isNaN(c) && c > 0) {
           const d = new Date(timestamps1m[i] * 1000)
           const day = String(d.getDate()).padStart(2, '0')
           const month = String(d.getMonth() + 1).padStart(2, '0')
+          const isLast = i === timestamps1m.length - 1
           points1m.push({
             price: parseFloat(c.toFixed(2)),
             open: quote1m.open?.[i] ? parseFloat(quote1m.open[i].toFixed(2)) : parseFloat(c.toFixed(2)),
             high: quote1m.high?.[i] ? parseFloat(quote1m.high[i].toFixed(2)) : parseFloat(c.toFixed(2)),
             low: quote1m.low?.[i] ? parseFloat(quote1m.low[i].toFixed(2)) : parseFloat(c.toFixed(2)),
-            label: `${day}/${month}`
+            label: isLast ? 'Atual' : `${day}/${month}`
           })
         }
       }
@@ -72,17 +77,21 @@ async function fetchQuote(symbol) {
 
         if (timestamps1d.length > 0 && quote1d?.close) {
           for (let i = 0; i < timestamps1d.length; i++) {
-            const c = quote1d.close[i]
+            let c = quote1d.close[i]
+            if ((c === null || typeof c !== 'number' || isNaN(c)) && i === timestamps1d.length - 1 && lastPrice) {
+              c = lastPrice
+            }
             if (c !== null && typeof c === 'number' && !isNaN(c) && c > 0) {
               const d = new Date(timestamps1d[i] * 1000)
               const hours = String(d.getHours()).padStart(2, '0')
               const mins = String(d.getMinutes()).padStart(2, '0')
+              const isLast = i === timestamps1d.length - 1
               points1d.push({
                 price: parseFloat(c.toFixed(2)),
                 open: quote1d.open?.[i] ? parseFloat(quote1d.open[i].toFixed(2)) : parseFloat(c.toFixed(2)),
                 high: quote1d.high?.[i] ? parseFloat(quote1d.high[i].toFixed(2)) : parseFloat(c.toFixed(2)),
                 low: quote1d.low?.[i] ? parseFloat(quote1d.low[i].toFixed(2)) : parseFloat(c.toFixed(2)),
-                label: `${hours}:${mins}`
+                label: isLast ? 'Atual' : `${hours}:${mins}`
               })
             }
           }
@@ -105,18 +114,22 @@ async function fetchQuote(symbol) {
 
         if (timestamps1w.length > 0 && quote1w?.close) {
           for (let i = 0; i < timestamps1w.length; i++) {
-            const c = quote1w.close[i]
+            let c = quote1w.close[i]
+            if ((c === null || typeof c !== 'number' || isNaN(c)) && i === timestamps1w.length - 1 && lastPrice) {
+              c = lastPrice
+            }
             if (c !== null && typeof c === 'number' && !isNaN(c) && c > 0) {
               const d = new Date(timestamps1w[i] * 1000)
               const day = String(d.getDate()).padStart(2, '0')
               const month = String(d.getMonth() + 1).padStart(2, '0')
               const hours = String(d.getHours()).padStart(2, '0')
+              const isLast = i === timestamps1w.length - 1
               points1w.push({
                 price: parseFloat(c.toFixed(2)),
                 open: quote1w.open?.[i] ? parseFloat(quote1w.open[i].toFixed(2)) : parseFloat(c.toFixed(2)),
                 high: quote1w.high?.[i] ? parseFloat(quote1w.high[i].toFixed(2)) : parseFloat(c.toFixed(2)),
                 low: quote1w.low?.[i] ? parseFloat(quote1w.low[i].toFixed(2)) : parseFloat(c.toFixed(2)),
-                label: `${day}/${month} ${hours}h`
+                label: isLast ? 'Atual' : `${day}/${month} ${hours}h`
               })
             }
           }

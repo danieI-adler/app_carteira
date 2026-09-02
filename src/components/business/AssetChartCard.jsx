@@ -70,24 +70,30 @@ export default function AssetChartCard({ asset, timeframe = '1w', onSelect }) {
 
           const validPoints = []
           for (let i = 0; i < timestamps.length; i++) {
-            const c = closes[i]
+            let c = closes[i]
+            if ((c === null || typeof c !== 'number' || isNaN(c)) && i === timestamps.length - 1 && currentPrice) {
+              c = currentPrice
+            }
             if (c !== null && typeof c === 'number' && !isNaN(c) && c > 0) {
               const dateObj = new Date(timestamps[i] * 1000)
-              let label = ''
+              const isLast = i === timestamps.length - 1
+              let label = isLast ? 'Atual' : ''
 
-              if (timeframe === '1d') {
-                const hours = String(dateObj.getHours()).padStart(2, '0')
-                const mins = String(dateObj.getMinutes()).padStart(2, '0')
-                label = `${hours}:${mins}`
-              } else if (timeframe === '1w') {
-                const day = String(dateObj.getDate()).padStart(2, '0')
-                const month = String(dateObj.getMonth() + 1).padStart(2, '0')
-                const hours = String(dateObj.getHours()).padStart(2, '0')
-                label = `${day}/${month} ${hours}h`
-              } else {
-                const day = String(dateObj.getDate()).padStart(2, '0')
-                const month = String(dateObj.getMonth() + 1).padStart(2, '0')
-                label = `${day}/${month}`
+              if (!isLast) {
+                if (timeframe === '1d') {
+                  const hours = String(dateObj.getHours()).padStart(2, '0')
+                  const mins = String(dateObj.getMinutes()).padStart(2, '0')
+                  label = `${hours}:${mins}`
+                } else if (timeframe === '1w') {
+                  const day = String(dateObj.getDate()).padStart(2, '0')
+                  const month = String(dateObj.getMonth() + 1).padStart(2, '0')
+                  const hours = String(dateObj.getHours()).padStart(2, '0')
+                  label = `${day}/${month} ${hours}h`
+                } else {
+                  const day = String(dateObj.getDate()).padStart(2, '0')
+                  const month = String(dateObj.getMonth() + 1).padStart(2, '0')
+                  label = `${day}/${month}`
+                }
               }
 
               validPoints.push({
@@ -120,16 +126,16 @@ export default function AssetChartCard({ asset, timeframe = '1w', onSelect }) {
 
     fetchChart()
     return () => { isCancelled = true }
-  }, [symbol, timeframe, asset.chart_data])
+  }, [symbol, timeframe, asset.chart_data, currentPrice])
 
-  // Process and compute chart series (ensuring last point is strictly current price)
+  // Process and compute chart series (preserving all historical points with exact accuracy)
   const chartData = useMemo(() => {
     let series = []
 
     if (fetchedData && fetchedData.length >= 2) {
       series = fetchedData.map(p => ({ ...p }))
     } else {
-      // High-resolution calculation
+      // High-resolution fallback calculation
       let hash = 0
       for (let i = 0; i < symbol.length; i++) {
         hash = (hash << 5) - hash + symbol.charCodeAt(i)
@@ -183,14 +189,12 @@ export default function AssetChartCard({ asset, timeframe = '1w', onSelect }) {
       }
     }
 
-    // ALWAYS enforce that the last point is strictly the current price labeled 'Atual'
+    // Ensure the last point matches the latest price and is labeled 'Atual'
     if (series.length > 0) {
       const lastIdx = series.length - 1
       series[lastIdx] = {
         ...series[lastIdx],
         price: parseFloat(currentPrice.toFixed(2)),
-        high: Math.max(series[lastIdx].high || currentPrice, currentPrice),
-        low: Math.min(series[lastIdx].low || currentPrice, currentPrice),
         label: 'Atual',
       }
     }
