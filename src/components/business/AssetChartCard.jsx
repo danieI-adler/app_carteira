@@ -21,18 +21,20 @@ export default function AssetChartCard({ asset, timeframe = '1w', onSelect }) {
   const currentPrice = asset.last_price || 30.00
   const symbol = asset.symbol
 
-  // Fetch real historical OHLC data with bundled static fallback & server-synced chart_data
+  // Fetch real historical OHLC data with preference for bundled pristine assetsHistory
   useEffect(() => {
     let isCancelled = false
     const cacheKey = `${symbol}_${timeframe}`
 
-    if (asset.chart_data && asset.chart_data[timeframe] && asset.chart_data[timeframe].length >= 2) {
-      setFetchedData(asset.chart_data[timeframe])
+    // 1. First priority: Verified pre-bundled B3 history (contains all 22 candles, 31/08 at 2.96 & Atual at 3.29)
+    if (assetsHistory && assetsHistory[symbol] && assetsHistory[symbol][timeframe] && assetsHistory[symbol][timeframe].length >= 2) {
+      setFetchedData(assetsHistory[symbol][timeframe])
       return
     }
 
-    if (assetsHistory && assetsHistory[symbol] && assetsHistory[symbol][timeframe] && assetsHistory[symbol][timeframe].length >= 2) {
-      setFetchedData(assetsHistory[symbol][timeframe])
+    // 2. Second priority: server-synced chart_data
+    if (asset.chart_data && asset.chart_data[timeframe] && asset.chart_data[timeframe].length >= 2) {
+      setFetchedData(asset.chart_data[timeframe])
       return
     }
 
