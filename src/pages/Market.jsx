@@ -115,7 +115,7 @@ export default function Market() {
         <div className="flex items-center gap-2 text-zinc-300">
           <Clock size={15} className="text-zinc-500 shrink-0" />
           <span>
-            <strong>Horário de Operação:</strong> Terças, Quintas e Fins de Semana (das 19h00 às 08h00).
+            <strong>Desafio Beta (04/09 a 02/10):</strong> Terças, Quintas e Fins de Semana (19h00 às 08h00).
           </span>
         </div>
         <div className="text-zinc-500 text-[11px]">

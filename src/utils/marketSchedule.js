@@ -1,18 +1,54 @@
 /**
  * Utility to calculate Market Opening Hours according to competition rules:
+ * - Challenge Period: 04/09/2026 19:00 BRT to 02/10/2026 19:00 BRT (Desafio Beta).
  * - Operating Days: Tuesdays, Thursdays, and Weekends (Friday 19h -> Monday 08h).
  * - Operating Hours: 19:00 BRT to 08:00 BRT of next day.
  * - Orders sent during open windows execute at next day's opening price.
  */
 
+export const COMPETITION_START_BRT = '2026-09-04T19:00:00-03:00'
+export const COMPETITION_END_BRT = '2026-10-02T19:00:00-03:00'
+
 export function getMarketStatus(date = new Date()) {
-  // Get current date/time in Brazil/Brasília timezone (UTC-3)
+  // Current time in Brazil/Brasília timezone (UTC-3)
   const brtString = date.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' })
   const brtDate = new Date(brtString)
 
-  const day = brtDate.getDay() // 0 = Sunday, 1 = Monday, 2 = Tuesday, 3 = Wednesday, 4 = Thursday, 5 = Friday, 6 = Saturday
+  const startDate = new Date(COMPETITION_START_BRT)
+  const endDate = new Date(COMPETITION_END_BRT)
+
   const hour = brtDate.getHours()
   const minute = brtDate.getMinutes()
+  const formattedBrtTime = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`
+
+  // 1. Before Competition Start (Before 04/09/2026 19:00 BRT)
+  if (date < startDate) {
+    return {
+      isOpen: false,
+      statusLabel: 'Mercado Fechado',
+      nextOpening: 'Início do Desafio Beta: Sexta (04/09) às 19h00',
+      formattedBrtTime,
+      operatingSchedule: 'Desafio Beta: 04/09 a 02/10 (Terças, Quintas e Fins de Semana das 19h às 08h)',
+      isBeforeStart: true,
+      isAfterEnd: false
+    }
+  }
+
+  // 2. After Competition End (After 02/10/2026 19:00 BRT)
+  if (date > endDate) {
+    return {
+      isOpen: false,
+      statusLabel: 'Desafio Encerrado',
+      nextOpening: 'Desafio Beta Finalizado em 02/10/2026',
+      formattedBrtTime,
+      operatingSchedule: 'Competição Encerrada',
+      isBeforeStart: false,
+      isAfterEnd: true
+    }
+  }
+
+  // 3. During Competition Period (04/09 to 02/10): Apply Standard Operational Rules
+  const day = brtDate.getDay() // 0 = Sunday, 1 = Monday, 2 = Tuesday, 3 = Wednesday, 4 = Thursday, 5 = Friday, 6 = Saturday
   const timeInMinutes = hour * 60 + minute
 
   const openAt = 19 * 60 // 19:00
@@ -21,15 +57,15 @@ export function getMarketStatus(date = new Date()) {
   let isOpen = false
   let nextOpening = ''
 
-  // 1. Tuesday evening (19:00 - 23:59) OR Wednesday morning (00:00 - 07:59)
+  // A. Tuesday evening (19:00 - 23:59) OR Wednesday morning (00:00 - 07:59)
   if ((day === 2 && timeInMinutes >= openAt) || (day === 3 && timeInMinutes < closeAt)) {
     isOpen = true
   }
-  // 2. Thursday evening (19:00 - 23:59) OR Friday morning (00:00 - 07:59)
+  // B. Thursday evening (19:00 - 23:59) OR Friday morning (00:00 - 07:59)
   else if ((day === 4 && timeInMinutes >= openAt) || (day === 5 && timeInMinutes < closeAt)) {
     isOpen = true
   }
-  // 3. Weekend Window: Friday 19:00 -> Saturday -> Sunday -> Monday 08:00
+  // C. Weekend Window: Friday 19:00 -> Saturday -> Sunday -> Monday 08:00
   else if (
     (day === 5 && timeInMinutes >= openAt) || // Friday after 19:00
     day === 6 || // Saturday all day
@@ -41,15 +77,15 @@ export function getMarketStatus(date = new Date()) {
 
   // Calculate Next Opening window for informative banner
   if (!isOpen) {
-    if (day === 1) { // Monday after 08:00 -> Opens Tuesday 19:00
+    if (day === 1) {
       nextOpening = 'Terça-feira às 19h00'
-    } else if (day === 2) { // Tuesday before 19:00 -> Opens Tuesday 19:00
+    } else if (day === 2) {
       nextOpening = 'Hoje (Terça) às 19h00'
-    } else if (day === 3) { // Wednesday after 08:00 -> Opens Thursday 19:00
+    } else if (day === 3) {
       nextOpening = 'Quinta-feira às 19h00'
-    } else if (day === 4) { // Thursday before 19:00 -> Opens Thursday 19:00
+    } else if (day === 4) {
       nextOpening = 'Hoje (Quinta) às 19h00'
-    } else if (day === 5) { // Friday before 19:00 -> Opens Friday 19:00
+    } else if (day === 5) {
       nextOpening = 'Hoje (Sexta) às 19h00'
     } else {
       nextOpening = 'Terça-feira às 19h00'
@@ -60,7 +96,9 @@ export function getMarketStatus(date = new Date()) {
     isOpen,
     statusLabel: isOpen ? 'Mercado Aberto' : 'Mercado Fechado',
     nextOpening,
-    formattedBrtTime: `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`,
-    operatingSchedule: 'Terças, Quintas e Fins de Semana (19h00 às 08h00)'
+    formattedBrtTime,
+    operatingSchedule: 'Desafio Beta: 04/09 a 02/10 (Terças, Quintas e Fins de Semana das 19h às 08h)',
+    isBeforeStart: false,
+    isAfterEnd: false
   }
 }
