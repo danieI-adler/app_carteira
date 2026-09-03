@@ -20,20 +20,19 @@ https://daniei-adler.github.io/app_carteira/
 ## Desafio
 
 ### Regras do desafio 
-*É permitido escolher qualquer estratégia de investimentos. 
-*A possibilidade de alavancagem ainda está sendo avaliada.
-*Ordens poderão ser enviadas em : 
-*Terça-feira a partir de 19h até Quarta-feira 8h ; 
-*Quinta-feira a partir de 19h até Sexta-feira 8h ; 
-*Sexta-feira de 19h até Segunda-feira 8h.
-*Ordens a mercado serão executadas com o preço de abertura do dia seguinte.
-*O desafio inicial tem duração de 1 mês, começando no dia 04/09/2026 e terminando no dia 02/10/2026.
+* É permitido escolher qualquer estratégia de investimentos.
+* Ordens poderão ser enviadas em : 
+* Terça-feira a partir de 19h até Quarta-feira 8h ; 
+* Quinta-feira a partir de 19h até Sexta-feira 8h ;
+* Sexta-feira de 19h até Segunda-feira 8h.
+* Ordens a mercado serão executadas com o preço de abertura do dia seguinte.
+* O desafio inicial tem duração de 1 mês, começando no dia 04/09/2026 e terminando no dia 02/10/2026.
 
 
 ---
 
 ## Sugestões e reclamações
-
-*Envie sua mensagem para o email : daniel.lp.adler@gmail.com
+* Envie sua mensagem para o email : daniel.lp.adler@gmail.com
 * **OU**
-*Abra um issue nesse repositório
+* Abra um issue nesse repositório
+
