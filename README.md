@@ -22,8 +22,10 @@ https://daniei-adler.github.io/app_carteira/
 ### Regras do desafio 
 É permitido escolher qualquer estratégia de investimentos. 
 A possibilidade de alavancagem ainda está sendo avaliada.
-#* **Empréstimos:** Opção de empréstimo voluntário (até 50% do PL) e concessão automática de empréstimo emergencial caso o PL fique negativo.
-Ordens poderão ser enviadas em : Terça-feira a partir de 19h até Quarta-feira 8h ; Quinta-feira a partir de 19h até Sexta-feira 8h ; Sexta-feira de 19h até Segunda-feira 8h.
+Ordens poderão ser enviadas em : 
+Terça-feira a partir de 19h até Quarta-feira 8h ; 
+Quinta-feira a partir de 19h até Sexta-feira 8h ; 
+Sexta-feira de 19h até Segunda-feira 8h.
 Ordens a mercado serão executadas com o preço de abertura do dia seguinte.
 O desafio inicial tem duração de 1 mês, começando no dia 04/09/2026 e terminando no dia 02/10/2026.
 
