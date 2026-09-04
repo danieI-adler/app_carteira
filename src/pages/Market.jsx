@@ -53,9 +53,9 @@ export default function Market() {
   }, [])
 
   const formatBRL = (val) => {
-    return new Intl.NumberFormat('pt-BR', {
+    return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'BRL',
+      currency: 'USD',
     }).format(val || 0)
   }
 
@@ -78,8 +78,7 @@ export default function Market() {
   const filteredAssets = assets.filter((asset) => {
     const matchesSearch = asset.symbol.toLowerCase().includes(filterQuery.toLowerCase()) ||
       asset.name.toLowerCase().includes(filterQuery.toLowerCase())
-    const matchesCategory = categoryFilter === 'all' || asset.type?.toLowerCase() === categoryFilter
-    return matchesSearch && matchesCategory
+    return matchesSearch
   })
 
   // In chart view, if user selected specific symbols, show those or fallback to filtered
@@ -93,8 +92,8 @@ export default function Market() {
       {/* Header & Market Status Banner */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-zinc-800 pb-4">
         <div>
-          <div className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider">Negociação</div>
-          <h1 className="text-xl font-semibold text-zinc-100 tracking-tight mt-0.5">Mercado de Ativos</h1>
+          <div className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider">Negociação Global</div>
+          <h1 className="text-xl font-semibold text-zinc-100 tracking-tight mt-0.5">Mercado de ETFs (USD)</h1>
         </div>
         
         {/* Market Status Pill */}
@@ -115,12 +114,12 @@ export default function Market() {
         <div className="flex items-center gap-2 text-zinc-300">
           <Clock size={15} className="text-zinc-500 shrink-0" />
           <span>
-            <strong>Desafio Beta (04/09 a 02/10):</strong> Terças, Quintas e Fins de Semana (19h00 às 08h00).
+            <strong>Desafio Gama (Mercado Semanal):</strong> Aberto fins de semana (Sexta 19h00 às Segunda 08h00 BRT).
           </span>
         </div>
         <div className="text-zinc-500 text-[11px]">
           {marketStatus.isOpen ? (
-            <span className="text-emerald-400 font-medium">Pregão noturno ativo para envio de ordens</span>
+            <span className="text-emerald-400 font-medium">Pregão de fim de semana ativo para envio de ordens</span>
           ) : (
             <span>Próxima abertura: <strong className="text-zinc-300">{marketStatus.nextOpening}</strong></span>
           )}

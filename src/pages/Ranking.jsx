@@ -119,9 +119,9 @@ export default function Ranking() {
   }, [])
 
   const formatBRL = (val) => {
-    return new Intl.NumberFormat('pt-BR', {
+    return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'BRL',
+      currency: 'USD',
     }).format(val || 0)
   }
 

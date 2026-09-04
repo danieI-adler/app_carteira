@@ -5,9 +5,9 @@ export default function Dashboard() {
   const { team, positions, transactions, loading, error } = usePortfolio()
 
   const formatBRL = (val) => {
-    return new Intl.NumberFormat('pt-BR', {
+    return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'BRL',
+      currency: 'USD',
     }).format(val || 0)
   }
 
@@ -44,7 +44,7 @@ export default function Dashboard() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-zinc-800 pb-4">
         <div>
-          <div className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider">Portfólio Institucional</div>
+          <div className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider">Portfólio Institucional (USD)</div>
           <h1 className="text-xl font-semibold text-zinc-100 tracking-tight mt-0.5">{teamName}</h1>
         </div>
         <div className="text-right sm:border-l sm:border-zinc-800 sm:pl-6">
@@ -60,12 +60,12 @@ export default function Dashboard() {
         <div className="surface-card p-4 space-y-1">
           <span className="text-[11px] text-zinc-500 font-medium uppercase tracking-wider">Caixa Disponível</span>
           <div className="font-mono-nums text-lg font-semibold text-zinc-100">{formatBRL(balance)}</div>
-          <div className="text-[11px] text-zinc-400">Poupança Automática (0,5% a.m.)</div>
+          <div className="text-[11px] text-zinc-400">Rendimento Automático (0,5% a.m.)</div>
         </div>
 
         {/* Metric 2 */}
         <div className="surface-card p-4 space-y-1">
-          <span className="text-[11px] text-zinc-500 font-medium uppercase tracking-wider">Rendimento Poupança</span>
+          <span className="text-[11px] text-zinc-500 font-medium uppercase tracking-wider">Rendimento Projetado</span>
           <div className="font-mono-nums text-lg font-semibold text-emerald-400">+{formatBRL(monthlySavingsYield)}</div>
           <div className="text-[11px] text-zinc-400">Projeção mensal sobre caixa livre</div>
         </div>
@@ -78,7 +78,7 @@ export default function Dashboard() {
             <span>{totalProfit >= 0 ? '+' : ''}{formatBRL(totalProfit)}</span>
           </div>
           <div className={`text-[11px] font-medium ${totalProfit >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
-            {totalProfit >= 0 ? '+' : ''}{profitPercent.toFixed(2)}% sobre R$ 100M base
+            {totalProfit >= 0 ? '+' : ''}{profitPercent.toFixed(2)}% sobre $ 100M base
           </div>
         </div>
 

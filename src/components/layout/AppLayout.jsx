@@ -21,10 +21,10 @@ export default function AppLayout() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
 
-  const formatBRL = (val) => {
-    return new Intl.NumberFormat('pt-BR', {
+  const formatUSD = (val) => {
+    return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'BRL',
+      currency: 'USD',
     }).format(val || 0)
   }
 
@@ -45,7 +45,7 @@ export default function AppLayout() {
       {/* Mobile Top Bar */}
       <header className="md:hidden bg-[#111114] border-b border-zinc-800 px-5 py-3.5 flex items-center justify-between sticky top-0 z-40">
         <div className="flex items-center gap-2.5">
-          <span className="font-semibold text-sm tracking-tight text-zinc-100">app_carteira</span>
+          <span className="font-semibold text-sm tracking-tight text-zinc-100">Desafio Gama</span>
         </div>
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
@@ -76,7 +76,7 @@ export default function AppLayout() {
           <div className="flex items-center justify-between px-2 pt-1">
             {!collapsed ? (
               <span className="font-semibold text-sm tracking-tight text-zinc-100 truncate">
-                app_carteira
+                Desafio Gama
               </span>
             ) : null}
 
@@ -102,9 +102,9 @@ export default function AppLayout() {
                 {team?.name || profile?.name || 'Equipe'}
               </div>
               <div className="pt-2 border-t border-zinc-800/80 flex items-center justify-between text-xs">
-                <span className="text-zinc-500 text-[11px]">Patrimônio</span>
+                <span className="text-zinc-500 text-[11px]">Patrimônio (USD)</span>
                 <span className="font-mono-nums font-semibold text-emerald-400">
-                  {formatBRL(team?.net_worth || 100000000)}
+                  {formatUSD(team?.net_worth || 100000000)}
                 </span>
               </div>
             </div>

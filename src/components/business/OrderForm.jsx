@@ -92,7 +92,7 @@ export default function OrderForm({ onCreateOrder, defaultSymbol }) {
         side,
         limitPrice: price,
       })
-      setMessage('Ordem registrada! Será executada com o preço de abertura da B3.')
+      setMessage('Ordem registrada! Será executada com o preço de abertura da sessão.')
       setQuantity('')
       setLimitPrice('')
     } catch (err) {
@@ -112,7 +112,7 @@ export default function OrderForm({ onCreateOrder, defaultSymbol }) {
         <h2 className="text-sm font-semibold text-zinc-100">Boleta de Negociação</h2>
         {selectedAsset && (
           <span className="font-mono-nums text-xs font-semibold text-zinc-300">
-            R$ {selectedAsset.last_price.toFixed(2)}
+            $ {selectedAsset.last_price.toFixed(2)}
           </span>
         )}
       </div>
@@ -121,7 +121,7 @@ export default function OrderForm({ onCreateOrder, defaultSymbol }) {
       <div className="p-2.5 bg-[#0c0c0e] border border-zinc-800 rounded text-[11px] text-zinc-400 leading-relaxed">
         {marketStatus.isOpen ? (
           <span>
-            <strong className="text-emerald-400 font-semibold">Pregão Noturno Aberto.</strong> Ordens a mercado serão executadas com o preço de abertura da B3.
+            <strong className="text-emerald-400 font-semibold">Pregão de Fim de Semana Aberto.</strong> Ordens a mercado serão executadas com o preço de abertura de segunda-feira.
           </span>
         ) : (
           <span>
@@ -289,7 +289,7 @@ export default function OrderForm({ onCreateOrder, defaultSymbol }) {
           <div className="p-3 bg-[#0c0c0e] border border-zinc-800 rounded-md flex justify-between items-center text-xs">
             <span className="text-zinc-500">Volume Estimado:</span>
             <span className="font-mono-nums font-semibold text-zinc-100">
-              R$ {totalEstimate.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              $ {totalEstimate.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
           </div>
         )}

@@ -8,9 +8,9 @@ export default function Analytics() {
   const [allocationViewMode, setAllocationViewMode] = useState('pie') // 'pie' or 'bars'
 
   const formatBRL = (val) => {
-    return new Intl.NumberFormat('pt-BR', {
+    return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'BRL',
+      currency: 'USD',
     }).format(val || 0)
   }
 
@@ -19,46 +19,50 @@ export default function Analytics() {
   const monthlySavingsYield = balance * 0.005
 
   const allocation = useMemo(() => {
-    let acoesVal = 0
-    let fiisVal = 0
-    let etfsVal = 0
+    let usaEquityVal = 0
+    let globalEquityVal = 0
+    let fixedIncomeCommodityVal = 0
+
+    const usaEquitySymbols = ['SPY', 'XLB', 'XLE', 'XLF', 'XLI', 'XLK', 'XLP', 'XLU', 'XLV', 'XLY', 'XTN']
+    const globalSymbols = ['EWJ', 'EWG', 'EEM', 'EWZ', 'FXE']
+    const fixedIncomeSymbols = ['TLT', 'GLD']
 
     positions.forEach((pos) => {
       const price = pos.assets?.last_price || pos.average_price
       const total = pos.quantity * price
-      const type = (pos.assets?.type || 'acao').toLowerCase()
+      const sym = pos.asset_symbol?.toUpperCase()
 
-      if (type === 'acao') acoesVal += total
-      else if (type === 'fii') fiisVal += total
-      else if (type === 'etf') etfsVal += total
-      else acoesVal += total
+      if (usaEquitySymbols.includes(sym)) usaEquityVal += total
+      else if (globalSymbols.includes(sym)) globalEquityVal += total
+      else if (fixedIncomeSymbols.includes(sym)) fixedIncomeCommodityVal += total
+      else usaEquityVal += total
     })
 
     const totalPortfolio = netWorth || 1
 
     return {
       cash: {
-        label: 'Caixa / Poupança Automática (0,5% a.m.)',
+        label: 'Caixa em Dólar / Rendimento Automático (0,5% a.m.)',
         value: balance,
         percent: Math.max(0, (balance / totalPortfolio) * 100),
         color: '#71717a', // zinc-500
       },
       acoes: {
-        label: 'Ações B3',
-        value: acoesVal,
-        percent: Math.max(0, (acoesVal / totalPortfolio) * 100),
+        label: 'ETFs de Ações EUA & Setoriais (S&P 500)',
+        value: usaEquityVal,
+        percent: Math.max(0, (usaEquityVal / totalPortfolio) * 100),
         color: '#10b981', // emerald
       },
       fiis: {
-        label: 'Fundos Imobiliários (FIIs)',
-        value: fiisVal,
-        percent: Math.max(0, (fiisVal / totalPortfolio) * 100),
+        label: 'ETFs Globais & Emergentes (Japão, Alemanha, etc.)',
+        value: globalEquityVal,
+        percent: Math.max(0, (globalEquityVal / totalPortfolio) * 100),
         color: '#3b82f6', // blue
       },
       etfs: {
-        label: 'ETFs & Índices Globais',
-        value: etfsVal,
-        percent: Math.max(0, (etfsVal / totalPortfolio) * 100),
+        label: 'Bonds (Treasuries), Ouro & Moedas (TLT, GLD, FXE)',
+        value: fixedIncomeCommodityVal,
+        percent: Math.max(0, (fixedIncomeCommodityVal / totalPortfolio) * 100),
         color: '#f59e0b', // amber
       },
     }
@@ -265,7 +269,7 @@ export default function Analytics() {
           <div className="grid grid-cols-2 gap-3">
             <div className="p-3 bg-[#0c0c0e] border border-zinc-800 rounded">
               <span className="text-[10px] text-zinc-500 font-medium uppercase block">Capital Base</span>
-              <span className="font-mono-nums text-xs font-semibold text-zinc-200 block mt-0.5">R$ 100.000.000,00</span>
+              <span className="font-mono-nums text-xs font-semibold text-zinc-200 block mt-0.5">$ 100,000,000.00</span>
             </div>
             <div className="p-3 bg-[#0c0c0e] border border-zinc-800 rounded">
               <span className="text-[10px] text-zinc-500 font-medium uppercase block">Patrimônio Líquido</span>

@@ -11,10 +11,10 @@ export default function AssetChartCard({ asset, timeframe = '1w', onSelect }) {
   const [loading, setLoading] = useState(false)
   const svgRef = useRef(null)
 
-  const formatBRL = (val) => {
-    return new Intl.NumberFormat('pt-BR', {
+  const formatUSD = (val) => {
+    return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'BRL',
+      currency: 'USD',
     }).format(val || 0)
   }
 
@@ -26,7 +26,7 @@ export default function AssetChartCard({ asset, timeframe = '1w', onSelect }) {
     let isCancelled = false
     const cacheKey = `${symbol}_${timeframe}`
 
-    // 1. First priority: Verified pre-bundled B3 history (contains all 22 candles, 31/08 at 2.96 & Atual at 3.29)
+    // 1. First priority: Verified pre-bundled US ETF history
     if (assetsHistory && assetsHistory[symbol] && assetsHistory[symbol][timeframe] && assetsHistory[symbol][timeframe].length >= 2) {
       setFetchedData(assetsHistory[symbol][timeframe])
       return
@@ -60,7 +60,7 @@ export default function AssetChartCard({ asset, timeframe = '1w', onSelect }) {
       }
 
       try {
-        const yahooSymbol = `${symbol}.SA`
+        const yahooSymbol = symbol
         const url = `https://query1.finance.yahoo.com/v8/finance/chart/${yahooSymbol}?range=${range}&interval=${interval}`
         const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } })
         
@@ -283,10 +283,10 @@ export default function AssetChartCard({ asset, timeframe = '1w', onSelect }) {
       <div className="flex items-start justify-between">
         <div>
           <h3 className="font-bold text-sm text-zinc-100 group-hover:text-zinc-200 tracking-tight">
-            {asset.symbol} B3
+            {asset.symbol}
           </h3>
           <span className="text-[11px] text-zinc-400 uppercase font-medium">
-            {asset.type || 'Ação'}
+            {asset.name || 'ETF Global'}
           </span>
         </div>
 
@@ -384,7 +384,7 @@ export default function AssetChartCard({ asset, timeframe = '1w', onSelect }) {
               fontFamily="ui-monospace, SFMono-Regular, monospace"
               fontWeight="bold"
             >
-              {formatBRL(currentPrice)}
+              {formatUSD(currentPrice)}
             </text>
           )}
 
@@ -421,7 +421,7 @@ export default function AssetChartCard({ asset, timeframe = '1w', onSelect }) {
                 fontFamily="ui-monospace, SFMono-Regular, monospace"
                 fontWeight="bold"
               >
-                {formatBRL(activeHover.price)}
+                {formatUSD(activeHover.price)}
               </text>
               <text
                 x="48"
@@ -432,8 +432,8 @@ export default function AssetChartCard({ asset, timeframe = '1w', onSelect }) {
                 fontFamily="ui-monospace, SFMono-Regular, monospace"
               >
                 {hoveredIndex === svgCoordinates.length - 1
-                  ? 'ÚLTIMO PREÇO B3'
-                  : `MÁX: ${activeHover.high.toFixed(2)} | MÍN: ${activeHover.low.toFixed(2)}`}
+                  ? 'ÚLTIMO PREÇO (USD)'
+                  : `MÁX: $${activeHover.high.toFixed(2)} | MÍN: $${activeHover.low.toFixed(2)}`}
               </text>
             </g>
           )}
