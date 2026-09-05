@@ -388,13 +388,16 @@ async function autoRebalanceLibra(priceMap) {
 
   console.log(`Equipe Libra: Patrimônio R$ ${totalNetWorth.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} (Caixa: R$ ${cashBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })})`)
 
-  // Top 5 Ações com Pesos Dinâmicos calculados pelo modelo XGBoost (Sharpe Preditivo & Volatilidade)
+  // 99% em Ações com Pesos Dinâmicos do XGBoost + 1% Caixa Livre Obrigatório para Oscilação de Mercado
+  const CASH_BUFFER_PCT = 0.01
+  const allocatableEquity = totalNetWorth * (1.0 - CASH_BUFFER_PCT)
+
   const dynamicPortfolio = [
-    { symbol: 'BRAP4', weight: 0.3605 }, // 36.05%
-    { symbol: 'ALUP11', weight: 0.3439 }, // 34.39%
-    { symbol: 'EQTL3', weight: 0.1180 },  // 11.80%
-    { symbol: 'CMIG4', weight: 0.0951 },  // 9.51%
-    { symbol: 'SBSP3', weight: 0.0824 },  // 8.24%
+    { symbol: 'BRAP4', weight: 0.3605 }, // 35.69% da carteira total
+    { symbol: 'ALUP11', weight: 0.3439 }, // 34.05% da carteira total
+    { symbol: 'EQTL3', weight: 0.1180 },  // 11.68% da carteira total
+    { symbol: 'CMIG4', weight: 0.0951 },  // 9.42% da carteira total
+    { symbol: 'SBSP3', weight: 0.0824 },  // 8.16% da carteira total
   ]
   const top5Symbols = dynamicPortfolio.map(p => p.symbol)
 
@@ -418,15 +421,17 @@ async function autoRebalanceLibra(priceMap) {
     }
   }
 
-  // 2. Rebalanceamento / Compras com os pesos dinâmicos do modelo
+  // 2. Rebalanceamento / Compras com os pesos dinâmicos do modelo e 1% de caixa de segurança
   for (const assetConfig of dynamicPortfolio) {
     const sym = assetConfig.symbol
     const pInfo = priceMap[sym]
     const price = pInfo?.openPrice || pInfo?.price || 30.00
-    const targetFinancial = totalNetWorth * assetConfig.weight
+    const targetFinancial = allocatableEquity * assetConfig.weight
     const currentQty = custodiaMap[sym]?.quantity || 0
     const targetQty = Math.floor(targetFinancial / price)
     const diff = targetQty - currentQty
+
+    const totalWeightPct = (assetConfig.weight * 0.99 * 100).toFixed(2)
 
     // Margem mínima de rebalanceamento
     if (diff > 5) {
@@ -438,7 +443,7 @@ async function autoRebalanceLibra(priceMap) {
         quantity: diff,
         status: 'pending'
       })
-      console.log(`-> [COMPRA ROBÔ] ${sym}: Comprar ${diff} ações (Peso: ${(assetConfig.weight * 100).toFixed(2)}%, Alvo: ${targetQty})`)
+      console.log(`-> [COMPRA ROBÔ] ${sym}: Comprar ${diff} ações (Peso: ${totalWeightPct}%, Alvo: ${targetQty})`)
     } else if (diff < -5) {
       ordersToInsert.push({
         team_id: team.id,
@@ -448,7 +453,7 @@ async function autoRebalanceLibra(priceMap) {
         quantity: Math.abs(diff),
         status: 'pending'
       })
-      console.log(`-> [AJUSTE VENDA] ${sym}: Vender ${Math.abs(diff)} ações para equilibrar em ${(assetConfig.weight * 100).toFixed(2)}%`)
+      console.log(`-> [AJUSTE VENDA] ${sym}: Vender ${Math.abs(diff)} ações para equilibrar em ${totalWeightPct}%`)
     }
   }
 
