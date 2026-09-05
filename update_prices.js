@@ -337,6 +337,132 @@ async function executePendingOrders(priceMap) {
   }
 }
 
+async function autoRebalanceLibra(priceMap) {
+  console.log('\n--- AUTOMAÇÃO DO ROBÔ LIBRA (XGBOOST 100% EQUITY) ---')
+  
+  // 1. Buscar a equipe Libra
+  const { data: team, error: teamErr } = await supabase
+    .from('teams')
+    .select('*')
+    .ilike('name', '%libra%')
+    .single()
+
+  if (teamErr || !team) {
+    console.log('Equipe Libra não cadastrada no Supabase. Pulando rebalanceamento automático.')
+    return
+  }
+
+  // 2. Buscar posições atuais de custódia
+  const { data: positions } = await supabase
+    .from('portfolio_positions')
+    .select('*')
+    .eq('team_id', team.id)
+    .eq('position_type', 'long')
+
+  const custodiaMap = {}
+  let totalEquityValue = 0
+
+  if (positions && positions.length > 0) {
+    for (const pos of positions) {
+      const pInfo = priceMap[pos.asset_symbol]
+      const currPrice = pInfo?.price || pos.average_price || 30.00
+      const posVal = pos.quantity * currPrice
+      totalEquityValue += posVal
+      custodiaMap[pos.asset_symbol] = {
+        quantity: pos.quantity,
+        average_price: pos.average_price,
+        current_price: currPrice,
+        value: posVal
+      }
+    }
+  }
+
+  const cashBalance = parseFloat(team.balance || 0)
+  const totalNetWorth = cashBalance + totalEquityValue
+
+  // Atualizar patrimônio líquido da equipe Libra no banco
+  await supabase
+    .from('teams')
+    .update({ net_worth: totalNetWorth })
+    .eq('id', team.id)
+
+  console.log(`Equipe Libra: Patrimônio R$ ${totalNetWorth.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} (Caixa: R$ ${cashBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })})`)
+
+  // Top 5 Ações selecionadas pelo modelo XGBoost Stock Picking (20% cada)
+  const top5Symbols = ['CMIG4', 'BRAP4', 'EQTL3', 'ALUP11', 'SBSP3']
+  const targetPerAsset = totalNetWorth / 5
+
+  const ordersToInsert = []
+
+  // 1. Vendas de ativos que não estão mais no Top 5
+  for (const sym of Object.keys(custodiaMap)) {
+    if (!top5Symbols.includes(sym)) {
+      const pos = custodiaMap[sym]
+      if (pos.quantity > 0) {
+        ordersToInsert.push({
+          team_id: team.id,
+          asset_symbol: sym,
+          side: 'sell',
+          order_type: 'market',
+          quantity: pos.quantity,
+          status: 'pending'
+        })
+        console.log(`-> [VENDA ROBÔ] ${sym}: ${pos.quantity} ações (fora do Top 5)`)
+      }
+    }
+  }
+
+  // 2. Rebalanceamento / Compras do Top 5
+  for (const sym of top5Symbols) {
+    const pInfo = priceMap[sym]
+    const price = pInfo?.openPrice || pInfo?.price || 30.00
+    const currentQty = custodiaMap[sym]?.quantity || 0
+    const targetQty = Math.floor(targetPerAsset / price)
+    const diff = targetQty - currentQty
+
+    // Margem mínima de rebalanceamento
+    if (diff > 5) {
+      ordersToInsert.push({
+        team_id: team.id,
+        asset_symbol: sym,
+        side: 'buy',
+        order_type: 'market',
+        quantity: diff,
+        status: 'pending'
+      })
+      console.log(`-> [COMPRA ROBÔ] ${sym}: Comprar ${diff} ações (Alvo: ${targetQty})`)
+    } else if (diff < -5) {
+      ordersToInsert.push({
+        team_id: team.id,
+        asset_symbol: sym,
+        side: 'sell',
+        order_type: 'market',
+        quantity: Math.abs(diff),
+        status: 'pending'
+      })
+      console.log(`-> [AJUSTE VENDA] ${sym}: Vender ${Math.abs(diff)} ações para equilibrar em 20%`)
+    }
+  }
+
+  if (ordersToInsert.length > 0) {
+    // Remover ordens pendentes antigas da equipe Libra para evitar duplicidade
+    await supabase
+      .from('orders')
+      .delete()
+      .eq('team_id', team.id)
+      .eq('status', 'pending')
+
+    const { error: ordErr } = await supabase.from('orders').insert(ordersToInsert)
+    if (ordErr) {
+      console.error('Erro ao inserir ordens da equipe Libra:', ordErr.message)
+    } else {
+      console.log(`Sucesso: ${ordersToInsert.length} ordens de rebalanceamento registradas para a Equipe Libra.`)
+    }
+  } else {
+    console.log('Carteira da Equipe Libra perfeitamente alinhada com as Top 5 do XGBoost.')
+  }
+}
+
 async function updatePrices() {
   console.log('Buscando lista de ativos no Supabase...')
   const { data: assets, error: fetchError } = await supabase
@@ -399,10 +525,15 @@ async function updatePrices() {
     }
   }
 
+  // 1. Executar liquidação das ordens pendentes com preço de abertura
   await executePendingOrders(priceMap)
 
-  console.log('Atualização diária de séries históricas concluída.')
+  // 2. Executar rebalanceamento automático da Equipe Libra (XGBoost 100% Equity)
+  await autoRebalanceLibra(priceMap)
+
+  console.log('\nAtualização diária de séries históricas e automação de ordens concluída.')
   process.exit(0)
 }
 
 updatePrices()
+
