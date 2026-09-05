@@ -86,9 +86,14 @@ async function autoRebalanceLibra() {
 
   // Fallback caso execute em ambiente GitHub Actions sem a pasta externa
   if (ordersToExecute.length === 0) {
-    // Top 5 Ações do modelo: CMIG4, BRAP4, EQTL3, ALUP11, SBSP3
-    const top5Symbols = ['CMIG4', 'BRAP4', 'EQTL3', 'ALUP11', 'SBSP3']
-    const targetPerAsset = totalNetWorth / 5
+    const dynamicPortfolio = [
+      { symbol: 'BRAP4', weight: 0.3605 }, // 36.05%
+      { symbol: 'ALUP11', weight: 0.3439 }, // 34.39%
+      { symbol: 'EQTL3', weight: 0.1180 },  // 11.80%
+      { symbol: 'CMIG4', weight: 0.0951 },  // 9.51%
+      { symbol: 'SBSP3', weight: 0.0824 },  // 8.24%
+    ]
+    const top5Symbols = dynamicPortfolio.map(p => p.symbol)
 
     // Buscar cotações mais recentes no Supabase
     const { data: assetQuotes } = await supabase
@@ -99,13 +104,15 @@ async function autoRebalanceLibra() {
     const priceMap = {}
     assetQuotes?.forEach(a => { priceMap[a.symbol] = parseFloat(a.last_price) })
 
-    for (const sym of top5Symbols) {
+    for (const assetConfig of dynamicPortfolio) {
+      const sym = assetConfig.symbol
       const price = priceMap[sym] || 30.00
+      const targetFinancial = totalNetWorth * assetConfig.weight
       const currentQty = custodiaMap[sym]?.quantity || 0
-      const targetQty = Math.floor(targetPerAsset / price)
+      const targetQty = Math.floor(targetFinancial / price)
       const diff = targetQty - currentQty
 
-      if (diff > 0) {
+      if (diff > 5) {
         ordersToExecute.push({
           symbol: sym,
           side: 'buy',
@@ -113,7 +120,7 @@ async function autoRebalanceLibra() {
           price,
           total: diff * price
         })
-      } else if (diff < 0) {
+      } else if (diff < -5) {
         ordersToExecute.push({
           symbol: sym,
           side: 'sell',

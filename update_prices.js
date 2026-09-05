@@ -388,9 +388,15 @@ async function autoRebalanceLibra(priceMap) {
 
   console.log(`Equipe Libra: Patrimônio R$ ${totalNetWorth.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} (Caixa: R$ ${cashBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })})`)
 
-  // Top 5 Ações selecionadas pelo modelo XGBoost Stock Picking (20% cada)
-  const top5Symbols = ['CMIG4', 'BRAP4', 'EQTL3', 'ALUP11', 'SBSP3']
-  const targetPerAsset = totalNetWorth / 5
+  // Top 5 Ações com Pesos Dinâmicos calculados pelo modelo XGBoost (Sharpe Preditivo & Volatilidade)
+  const dynamicPortfolio = [
+    { symbol: 'BRAP4', weight: 0.3605 }, // 36.05%
+    { symbol: 'ALUP11', weight: 0.3439 }, // 34.39%
+    { symbol: 'EQTL3', weight: 0.1180 },  // 11.80%
+    { symbol: 'CMIG4', weight: 0.0951 },  // 9.51%
+    { symbol: 'SBSP3', weight: 0.0824 },  // 8.24%
+  ]
+  const top5Symbols = dynamicPortfolio.map(p => p.symbol)
 
   const ordersToInsert = []
 
@@ -412,12 +418,14 @@ async function autoRebalanceLibra(priceMap) {
     }
   }
 
-  // 2. Rebalanceamento / Compras do Top 5
-  for (const sym of top5Symbols) {
+  // 2. Rebalanceamento / Compras com os pesos dinâmicos do modelo
+  for (const assetConfig of dynamicPortfolio) {
+    const sym = assetConfig.symbol
     const pInfo = priceMap[sym]
     const price = pInfo?.openPrice || pInfo?.price || 30.00
+    const targetFinancial = totalNetWorth * assetConfig.weight
     const currentQty = custodiaMap[sym]?.quantity || 0
-    const targetQty = Math.floor(targetPerAsset / price)
+    const targetQty = Math.floor(targetFinancial / price)
     const diff = targetQty - currentQty
 
     // Margem mínima de rebalanceamento
@@ -430,7 +438,7 @@ async function autoRebalanceLibra(priceMap) {
         quantity: diff,
         status: 'pending'
       })
-      console.log(`-> [COMPRA ROBÔ] ${sym}: Comprar ${diff} ações (Alvo: ${targetQty})`)
+      console.log(`-> [COMPRA ROBÔ] ${sym}: Comprar ${diff} ações (Peso: ${(assetConfig.weight * 100).toFixed(2)}%, Alvo: ${targetQty})`)
     } else if (diff < -5) {
       ordersToInsert.push({
         team_id: team.id,
@@ -440,7 +448,7 @@ async function autoRebalanceLibra(priceMap) {
         quantity: Math.abs(diff),
         status: 'pending'
       })
-      console.log(`-> [AJUSTE VENDA] ${sym}: Vender ${Math.abs(diff)} ações para equilibrar em 20%`)
+      console.log(`-> [AJUSTE VENDA] ${sym}: Vender ${Math.abs(diff)} ações para equilibrar em ${(assetConfig.weight * 100).toFixed(2)}%`)
     }
   }
 
