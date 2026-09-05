@@ -2,11 +2,13 @@
 
 on:
   schedule:
-    # 1. Abertura das janelas de ordens: Terças, Quintas e Sextas às 19h05 BRT (22h05 UTC)
+    # Abertura das janelas de ordens: Terças, Quintas e Sextas às 19h05 BRT (22h05 UTC)
+    # Nesta única execução:
+    # 1. Coleta cotações de fechamento da B3
+    # 2. Executa/liquida ordens pendentes anteriores
+    # 3. Roda o modelo de rebalanceamento da equipe Libra e lança novas ordens a mercado
     - cron: '5 22 * * 2,4,5'
-    # 2. Abertura da B3: Segunda a Sexta às 10h02 BRT (13h02 UTC) para atualizar preços e liquidar ordens pendentes
-    - cron: '2 13 * * 1-5'
-  workflow_dispatch: # Permite disparo manual via botão no GitHub
+  workflow_dispatch: # Permite disparo manual via botão na aba Actions
 
 jobs:
   market_job:
@@ -23,7 +25,7 @@ jobs:
       - name: Instalar Dependências
         run: npm ci
 
-      - name: Executar Atualização de Cotações e Rebalanceamento do Robô
+      - name: Executar Cotações, Liquidação e Rebalanceamento
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
@@ -31,4 +33,3 @@ jobs:
           SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
         run: |
           node update_prices.js
-          node rebalance_libra.js
