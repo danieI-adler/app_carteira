@@ -26,7 +26,11 @@ export default function Login() {
 
         const { data: newTeam, error: newTeamError } = await supabase
           .from('teams')
-          .insert({ name: newTeamName.trim() })
+          .insert({ 
+            name: newTeamName.trim(),
+            balance: 100000000.00,
+            net_worth: 100000000.00
+          })
           .select()
           .single()
 
